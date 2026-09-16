@@ -224,7 +224,7 @@ export function Landing() {
 
       <footer className="footer">
         <p>
-          Built by <a href={AUTHOR.portfolio}>{AUTHOR.name}</a>
+          Built by {AUTHOR.name}
         </p>
         <p className="footer-links">
           <a href={REPO}>Source on GitHub</a>

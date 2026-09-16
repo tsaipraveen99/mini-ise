@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Checkpoint } from './Checkpoint'
-import { AUTHOR, BOOTCAMP, REPO } from './content'
+import { AUTHOR, BOOTCAMP, REPO, SITE } from './content'
 
 interface Slide {
   title: string
@@ -267,7 +267,7 @@ const SLIDES: Slide[] = [
         <p className="s-lede">Questions?</p>
         <p className="s-links">
           <span>{REPO.replace('https://', '')}</span>
-          <span>{AUTHOR.portfolio.replace('https://', '')}</span>
+          <span>{SITE.replace('https://', '')}</span>
         </p>
       </div>
     ),
