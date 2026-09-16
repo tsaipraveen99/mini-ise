@@ -398,6 +398,41 @@ tbody tr {
   background: var(--quarantine-bg);
 }
 
+.interpretation {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.interpretation span {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.suggestions-label {
+  margin-top: 0.6rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.chip.suggestion {
+  background: var(--card);
+  border-color: var(--quarantine);
+  color: var(--text);
+  text-align: left;
+}
+
+.chip.suggestion:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* Policies */
 .policies ol {
   list-style: none;

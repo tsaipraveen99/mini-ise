@@ -28,7 +28,22 @@ class LLMUnavailable(Exception):
 class DraftResult(BaseModel):
     feasible: bool
     explanation: str
+    # What the system understood the admin to mean, shown on every draft so misreadings are caught.
+    interpretation: str = ""
+    # Rules the admin could type instead; only filled when the request can't become a policy.
+    suggestions: list[str] = []
     policy: PolicyBase | None = None
+
+
+MAX_SUGGESTIONS = 3
+MAX_SUGGESTION_LENGTH = 120
+
+# Used when the model gives no usable alternatives, e.g. its draft failed validation.
+FALLBACK_SUGGESTIONS = [
+    "Allow employees on managed devices to reach every resource",
+    "Contractors cannot reach finance after 6pm",
+    "Quarantine unpatched devices connecting remotely",
+]
 
 
 _CONDITION_SCHEMA = {
@@ -68,9 +83,11 @@ DRAFT_SCHEMA = {
     "properties": {
         "feasible": {"type": "boolean"},
         "explanation": {"type": "string"},
+        "interpretation": {"type": "string"},
+        "suggestions": {"type": "array", "items": {"type": "string"}},
         "policy": {"anyOf": [_POLICY_SCHEMA, {"type": "null"}]},
     },
-    "required": ["feasible", "explanation", "policy"],
+    "required": ["feasible", "explanation", "interpretation", "suggestions", "policy"],
     "additionalProperties": False,
 }
 
@@ -93,7 +110,11 @@ Pick a priority that places the new policy correctly among the existing ones: a 
 
 The reason is shown to the user who was affected, so keep it short and plain.
 
-If the rule cannot be expressed as a single policy with these attributes (for example it names a specific person, needs an attribute that does not exist, or needs more than one policy), set feasible to false, set policy to null, and say in explanation what is missing. Otherwise set feasible to true and describe in one sentence what the policy does."""
+If the rule cannot be expressed as a single policy with these attributes (for example it names a specific person, needs an attribute that does not exist, or needs more than one policy), set feasible to false, set policy to null, and say in explanation what is missing. Otherwise set feasible to true and describe in one sentence what the policy does.
+
+Always set interpretation to one plain sentence starting with "You want" that restates what the administrator asked for in everyday words, even when the rule is not feasible.
+
+When feasible is false, set suggestions to 2 or 3 rules the administrator could type instead. Keep them as close as possible to what they asked for, make sure each one can be expressed as a single policy with the attributes above, and write each as a short plain-English instruction of at most 12 words, like "Contractors cannot reach finance after 6pm". When feasible is true, set suggestions to an empty list."""
 
 
 def _describe_policies(policies: Sequence[Policy]) -> str:
@@ -134,16 +155,37 @@ def explain_validation_error(exc: ValidationError) -> str:
     return "; ".join(dict.fromkeys(problems))
 
 
+def _clean_suggestions(raw: object) -> list[str]:
+    if not isinstance(raw, list):
+        return []
+    cleaned = [s.strip() for s in raw if isinstance(s, str) and s.strip()]
+    return [s for s in dict.fromkeys(cleaned) if len(s) <= MAX_SUGGESTION_LENGTH][:MAX_SUGGESTIONS]
+
+
 def parse_draft(raw_json: str) -> DraftResult:
     """Validate the model's JSON. A draft that fails validation is never offered for approval."""
     data = json.loads(raw_json)
+    interpretation = data.get("interpretation") if isinstance(data.get("interpretation"), str) else ""
+
     if not data.get("feasible") or data.get("policy") is None:
-        return DraftResult(feasible=False, explanation=data.get("explanation") or "The rule could not be drafted.")
+        return DraftResult(
+            feasible=False,
+            explanation=data.get("explanation") or "The rule could not be drafted.",
+            interpretation=interpretation,
+            suggestions=_clean_suggestions(data.get("suggestions")) or FALLBACK_SUGGESTIONS,
+        )
     try:
         policy = PolicyBase.model_validate(data["policy"])
     except ValidationError as exc:
-        return DraftResult(feasible=False, explanation=f"The AI draft can't be used: {explain_validation_error(exc)}.")
-    return DraftResult(feasible=True, explanation=data.get("explanation", ""), policy=policy)
+        return DraftResult(
+            feasible=False,
+            explanation=f"The AI draft can't be used: {explain_validation_error(exc)}.",
+            interpretation=interpretation,
+            suggestions=FALLBACK_SUGGESTIONS,
+        )
+    return DraftResult(
+        feasible=True, explanation=data.get("explanation", ""), interpretation=interpretation, policy=policy
+    )
 
 
 async def draft_policy(text: str, existing: Sequence[Policy]) -> DraftResult:

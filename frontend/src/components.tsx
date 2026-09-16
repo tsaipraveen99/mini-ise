@@ -173,7 +173,37 @@ export function PolicyDrafter({ onApproved }: { onApproved: () => void }) {
 
       {error && <p className="notice notice-error">{error}</p>}
 
-      {draft && !draft.feasible && <p className="notice notice-warn">{draft.explanation}</p>}
+      {draft?.interpretation && (
+        <p className="interpretation">
+          <span>I understood:</span> {draft.interpretation}
+        </p>
+      )}
+
+      {draft && !draft.feasible && (
+        <div className="notice notice-warn">
+          <p>{draft.explanation}</p>
+          {draft.suggestions.length > 0 && (
+            <>
+              <p className="suggestions-label">Try one of these instead:</p>
+              <div className="suggestions">
+                {draft.suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    className="chip suggestion"
+                    onClick={() => {
+                      setText(suggestion)
+                      setDraft(null)
+                    }}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {draft?.feasible && draft.policy && (
         <div className="draft">

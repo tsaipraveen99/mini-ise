@@ -48,6 +48,8 @@ export interface Stats {
 export interface DraftResult {
   feasible: boolean
   explanation: string
+  interpretation: string
+  suggestions: string[]
   policy: PolicyBase | null
 }
 
