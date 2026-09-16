@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from mini_ise.llm import DRAFT_SCHEMA, LLMUnavailable, draft_policy, parse_draft
+from mini_ise.llm import DRAFT_SCHEMA, SYSTEM_PROMPT, LLMUnavailable, draft_policy, parse_draft
 from mini_ise.rules import Effect
 
 VALID_POLICY = {
@@ -40,7 +40,28 @@ def test_draft_with_invented_values_fails_validation() -> None:
     result = parse_draft(json.dumps({"feasible": True, "explanation": "ok", "policy": bad}))
     assert not result.feasible
     assert result.policy is None
-    assert result.explanation.startswith("The AI draft failed validation")
+    assert result.explanation.startswith("The AI draft can't be used: condition 1: role eq needs one of")
+
+
+def test_allow_everything_draft_gets_a_readable_explanation() -> None:
+    # What Claude produced for "allow all requests" before the prompt said conditions are required.
+    allow_all = {**VALID_POLICY, "effect": "allow", "conditions": []}
+    result = parse_draft(json.dumps({"feasible": True, "explanation": "ok", "policy": allow_all}))
+    assert not result.feasible
+    assert "at least one condition" in result.explanation
+    assert "List should have" not in result.explanation
+
+
+def test_several_problems_are_all_reported() -> None:
+    bad = {**VALID_POLICY, "priority": 0, "conditions": []}
+    result = parse_draft(json.dumps({"feasible": True, "explanation": "ok", "policy": bad}))
+    assert "priority must be between 1 and 1000" in result.explanation
+    assert "at least one condition" in result.explanation
+
+
+def test_prompt_tells_the_model_catch_all_rules_are_infeasible() -> None:
+    assert "between 1 and 10 conditions" in SYSTEM_PROMPT
+    assert "allow everything" in SYSTEM_PROMPT
 
 
 def test_draft_claiming_feasible_without_policy_is_not_offered() -> None:

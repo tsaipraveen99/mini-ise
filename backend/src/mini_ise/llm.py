@@ -87,6 +87,8 @@ Attributes and the operators each one accepts:
 
 Use eq and neq with a single string, and in and not_in with a list of strings.
 
+Every policy needs between 1 and 10 conditions. A rule that would apply to every request, such as "allow everything" or "block everything", cannot be a policy: set feasible to false and explain that a policy with no conditions would override every other policy and the default deny that zero trust depends on.
+
 Pick a priority that places the new policy correctly among the existing ones: a restriction (deny or quarantine) must have a lower number than any allow policy it should override. Priorities must be between 1 and 1000.
 
 The reason is shown to the user who was affected, so keep it short and plain.
@@ -102,6 +104,36 @@ def _describe_policies(policies: Sequence[Policy]) -> str:
     return "\n".join(lines) or "(none)"
 
 
+_FRIENDLY_ERRORS = {
+    ("conditions", "too_short"): (
+        "a policy needs at least one condition. A policy that matches every request would override "
+        "all other policies and the default deny"
+    ),
+    ("conditions", "too_long"): "a policy can have at most 10 conditions",
+    ("priority", "greater_than_equal"): "priority must be between 1 and 1000",
+    ("priority", "less_than_equal"): "priority must be between 1 and 1000",
+}
+
+
+def explain_validation_error(exc: ValidationError) -> str:
+    """Turn Pydantic errors into sentences an admin can act on."""
+    problems: list[str] = []
+    for err in exc.errors():
+        loc = err["loc"]
+        friendly = _FRIENDLY_ERRORS.get((str(loc[0]), err["type"])) if len(loc) == 1 else None
+        if friendly:
+            problems.append(friendly)
+            continue
+        message = err["msg"].removeprefix("Value error, ")
+        if len(loc) >= 2 and loc[0] == "conditions" and isinstance(loc[1], int):
+            problems.append(f"condition {loc[1] + 1}: {message}")
+        elif loc:
+            problems.append(f"{'.'.join(str(part) for part in loc)}: {message}")
+        else:
+            problems.append(message)
+    return "; ".join(dict.fromkeys(problems))
+
+
 def parse_draft(raw_json: str) -> DraftResult:
     """Validate the model's JSON. A draft that fails validation is never offered for approval."""
     data = json.loads(raw_json)
@@ -110,8 +142,7 @@ def parse_draft(raw_json: str) -> DraftResult:
     try:
         policy = PolicyBase.model_validate(data["policy"])
     except ValidationError as exc:
-        problems = "; ".join(err["msg"] for err in exc.errors())
-        return DraftResult(feasible=False, explanation=f"The AI draft failed validation: {problems}")
+        return DraftResult(feasible=False, explanation=f"The AI draft can't be used: {explain_validation_error(exc)}.")
     return DraftResult(feasible=True, explanation=data.get("explanation", ""), policy=policy)
 
 
