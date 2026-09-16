@@ -1,9 +1,9 @@
 // POST /api/draft: turns a plain-English rule into a draft policy for the public engine page.
 // Nothing is stored. Approved drafts live only in the visitor's browser.
 import Anthropic from '@anthropic-ai/sdk'
-import { DRAFT_SCHEMA, EXISTING_POLICIES, SYSTEM_PROMPT } from './_lib/prompt'
-import { checkLimits } from './_lib/rateLimit'
-import { parseDraft } from './_lib/validation'
+import { DRAFT_SCHEMA, EXISTING_POLICIES, SYSTEM_PROMPT } from './_lib/prompt.js'
+import { checkLimits } from './_lib/rateLimit.js'
+import { parseDraft } from './_lib/validation.js'
 
 const MODEL = process.env.PUBLIC_LLM_MODEL ?? 'claude-opus-5'
 const MIN_TEXT = 5

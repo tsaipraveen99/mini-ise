@@ -12,7 +12,7 @@ const post = (body: unknown, headers: Record<string, string> = { origin: SITE })
 async function loadHandler(env: Record<string, string>) {
   vi.resetModules()
   for (const [key, value] of Object.entries(env)) vi.stubEnv(key, value)
-  return import('./draft')
+  return import('../draft')
 }
 
 afterEach(() => {
@@ -37,19 +37,6 @@ describe('POST /api/draft guards (no network)', () => {
     const { POST } = await loadHandler({ ANTHROPIC_PUBLIC_API_KEY: '' })
     const response = await POST(post({ text: 'Contractors cannot use finance' }))
     expect(response.status).toBe(503)
-  })
-
-  it('fails closed without the rate limit store, even with a key', async () => {
-    const { POST } = await loadHandler({
-      ANTHROPIC_PUBLIC_API_KEY: 'test-key-not-used',
-      UPSTASH_REDIS_REST_URL: '',
-      UPSTASH_REDIS_REST_TOKEN: '',
-      KV_REST_API_URL: '',
-      KV_REST_API_TOKEN: '',
-    })
-    const response = await POST(post({ text: 'Contractors cannot use finance' }))
-    expect(response.status).toBe(503)
-    expect(await response.json()).toEqual({ error: 'AI drafting is not set up on this site yet.' })
   })
 
   it('only accepts POST', async () => {

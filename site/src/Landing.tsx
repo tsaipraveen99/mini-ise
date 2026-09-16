@@ -1,4 +1,4 @@
-import { EngineButton, SiteFooter, SiteHeader } from './Chrome'
+import { EngineButton, ExternalLink, SiteFooter, SiteHeader } from './Chrome'
 import { REPO } from './content'
 import { SEED_POLICIES, evaluate, formatHour, type AccessRequest } from './engine'
 
@@ -168,9 +168,9 @@ export function Landing() {
             </p>
             <div className="hero-actions">
               <EngineButton />
-              <a className="button button--quiet" href={REPO}>
+              <ExternalLink className="button button--quiet" href={REPO}>
                 Read the code
-              </a>
+              </ExternalLink>
             </div>
           </div>
           <ExampleDecision />
@@ -239,7 +239,7 @@ export function Landing() {
             <h2 id="kube-title">Tested under pressure on Kubernetes</h2>
             <p>
               Kubernetes runs several copies of the service and replaces any that fail. I pushed it to see what
-              actually happens, including what went wrong. <a href={`${REPO}/tree/main/k8s`}>Read the setup</a>
+              actually happens, including what went wrong. <ExternalLink href={`${REPO}/tree/main/k8s`}>Read the setup</ExternalLink>
             </p>
           </div>
           <div className="table-wrap">

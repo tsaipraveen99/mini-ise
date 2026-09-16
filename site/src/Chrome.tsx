@@ -2,27 +2,47 @@ import { useState, type MouseEvent, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import { AUTHOR, REPO } from './content'
 import { Logo } from './Logo'
-import { navigate } from './router'
+import { navigate, routeOf } from './router'
+import { closeSplash, getSplash, setSplash, splashDuration, wait } from './splashStore'
 
-/** A link that moves to another page with a transition. Plain clicks only; modified clicks open normally. */
-function useTransitionLink(hash: string) {
+const SPLASH_COPY = {
+  engine: { title: 'Opening the policy engine', detail: 'Loading the rules and live AI drafting' },
+  slides: { title: 'Opening the slides', detail: '13 slides · use ← → to move' },
+  landing: { title: 'Back to the overview', detail: 'Mini ISE' },
+}
+
+const isPlainClick = (event: MouseEvent) =>
+  event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
+
+/** A link to another page of the site. Shows the splash, then changes page behind it. */
+function useSplashLink(hash: string) {
   const [busy, setBusy] = useState(false)
   const onClick = async (event: MouseEvent<HTMLAnchorElement>) => {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    if (!isPlainClick(event)) return
     event.preventDefault()
-    // Paint the busy state first so it is what fades out during the transition.
-    flushSync(() => setBusy(true))
+    const route = routeOf(hash)
+    // Moving within the same page (e.g. to a section) needs no splash.
+    if (route === routeOf(window.location.hash)) {
+      await navigate(hash)
+      return
+    }
+    flushSync(() => {
+      setBusy(true)
+      setSplash(SPLASH_COPY[route])
+    })
     try {
+      await wait(splashDuration())
       await navigate(hash)
     } finally {
       setBusy(false)
+      await closeSplash()
     }
   }
   return { busy, onClick }
 }
 
 export function PageLink({ hash, className, children }: { hash: string; className?: string; children: ReactNode }) {
-  const { onClick } = useTransitionLink(hash)
+  const { onClick } = useSplashLink(hash)
   return (
     <a href={hash} className={className} onClick={onClick}>
       {children}
@@ -30,8 +50,31 @@ export function PageLink({ hash, className, children }: { hash: string; classNam
   )
 }
 
+/** A link that leaves the site. Shows where it is going, then redirects unless the visitor chooses to stay. */
+export function ExternalLink({ href, className, children }: { href: string; className?: string; children: ReactNode }) {
+  const onClick = async (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isPlainClick(event)) return
+    event.preventDefault()
+    const url = new URL(href)
+    const splash = {
+      title: url.hostname === 'github.com' ? 'Opening GitHub' : `Opening ${url.hostname}`,
+      detail: `${url.hostname}${url.pathname}`,
+      href,
+    }
+    flushSync(() => setSplash(splash))
+    await wait(splashDuration())
+    // "Stay here" replaces or clears the splash, which cancels the redirect.
+    if (getSplash() === splash) window.location.assign(href)
+  }
+  return (
+    <a href={href} className={className} onClick={onClick}>
+      {children}
+    </a>
+  )
+}
+
 export function EngineButton({ label = 'Try the policy engine' }: { label?: string }) {
-  const { busy, onClick } = useTransitionLink('#/engine')
+  const { busy, onClick } = useSplashLink('#/engine')
   return (
     <a href="#/engine" className="button button--primary" aria-busy={busy} onClick={onClick}>
       {busy ? (
@@ -71,9 +114,9 @@ export function SiteHeader({ page }: { page: 'landing' | 'engine' }) {
           Engine
         </PageLink>
         <PageLink hash="#/slides">Slides</PageLink>
-        <a className="nav-code" href={REPO}>
+        <ExternalLink className="nav-code" href={REPO}>
           Code
-        </a>
+        </ExternalLink>
       </nav>
     </header>
   )
@@ -87,9 +130,9 @@ export function SiteFooter() {
         <span>Built by {AUTHOR.name}</span>
       </p>
       <p className="footer-links">
-        <a href={REPO}>Source on GitHub</a>
+        <ExternalLink href={REPO}>Source on GitHub</ExternalLink>
         <PageLink hash="#/slides">Talk slides</PageLink>
-        {AUTHOR.linkedin && <a href={AUTHOR.linkedin}>LinkedIn</a>}
+        {AUTHOR.linkedin && <ExternalLink href={AUTHOR.linkedin}>LinkedIn</ExternalLink>}
       </p>
     </footer>
   )

@@ -1,7 +1,7 @@
 // TypeScript port of PolicyBase validation (backend/src/mini_ise/rules.py) and parse_draft
 // (backend/src/mini_ise/llm.py). Both implementations run fixtures/policy-validation-cases.json.
 import type { Condition, Policy } from '../../src/engine'
-import { ATTRIBUTES, EFFECTS, LOCATIONS, OPS, RESOURCES, ROLES } from '../../src/vocab'
+import { ATTRIBUTES, EFFECTS, LOCATIONS, OPS, RESOURCES, ROLES } from '../../src/vocab.js'
 
 export type DraftPolicy = Omit<Policy, 'id' | 'enabled'>
 

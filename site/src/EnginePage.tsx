@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { DraftPolicy } from '../api/_lib/validation'
 import { AiDrafter } from './AiDrafter'
 import { Checkpoint } from './Checkpoint'
-import { PageLink, SiteFooter, SiteHeader } from './Chrome'
+import { ExternalLink, PageLink, SiteFooter, SiteHeader } from './Chrome'
 import { repoFile } from './content'
 import { SEED_POLICIES, type Policy } from './engine'
 
@@ -53,10 +53,11 @@ export function EnginePage() {
 
         <p className="engine-note">
           The engine runs in your browser. The same rules run in the Python service, and both are tested against the
-          same cases: <a href={repoFile('site/src/engine.ts')}>engine.ts</a> ·{' '}
-          <a href={repoFile('backend/src/mini_ise/rules.py')}>rules.py</a> ·{' '}
-          <a href={repoFile('fixtures/policy-cases.json')}>shared test cases</a>. Drafting uses{' '}
-          <a href={repoFile('site/api/draft.ts')}>a serverless function</a> with per-visitor and daily limits.
+          same cases: <ExternalLink href={repoFile('site/src/engine.ts')}>engine.ts</ExternalLink> ·{' '}
+          <ExternalLink href={repoFile('backend/src/mini_ise/rules.py')}>rules.py</ExternalLink> ·{' '}
+          <ExternalLink href={repoFile('fixtures/policy-cases.json')}>shared test cases</ExternalLink>. Drafting uses{' '}
+          <ExternalLink href={repoFile('site/api/draft.ts')}>a serverless function</ExternalLink> with per-visitor and
+          daily limits.
         </p>
       </main>
 

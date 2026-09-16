@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Checkpoint } from './Checkpoint'
+import { PageLink } from './Chrome'
 import { AUTHOR, BOOTCAMP, REPO, SITE } from './content'
 import { LogoMark } from './Logo'
 
@@ -396,10 +397,10 @@ export function Slides({ hash }: { hash: string }) {
         <SlideFrame key={index} slide={slide} index={index} direction={direction} />
       </div>
       <div className="deck-bar">
-        <a href="#top" className="deck-home">
+        <PageLink hash="#top" className="deck-home">
           <LogoMark className="deck-logo" title="" />
           Back to the site
-        </a>
+        </PageLink>
         <div className="deck-nav">
           <button type="button" onClick={() => go(index - 1)} disabled={index === 0}>
             Previous
