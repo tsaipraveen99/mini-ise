@@ -47,6 +47,19 @@ make kill-decision-pod      # watch a replacement pod appear
 make down                   # delete the cluster
 ```
 
+## Site and slides
+
+`site/` is a static React app: a landing page where you can run the policy engine in the browser, and the talk slides at `#/slides` (arrow keys to move, `N` for speaker notes, `F` for full screen, `#/slides/print` to save as PDF).
+
+The browser engine (`site/src/engine.ts`) and the Python engine (`backend/src/mini_ise/rules.py`) both run the shared cases in `fixtures/policy-cases.json`, so they can't quietly disagree.
+
+```bash
+cd site && npm install
+npm test          # shared cases + ordering rules
+npm run dev       # http://localhost:5173
+npm run build     # type-check and build to site/dist
+```
+
 ## Local development without Kubernetes
 
 ```bash

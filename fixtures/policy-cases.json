@@ -1,0 +1,320 @@
+{
+  "policies": [
+    {
+      "id": 1,
+      "name": "Quarantine unencrypted devices",
+      "description": "",
+      "priority": 10,
+      "effect": "quarantine",
+      "reason": "Device disk is not encrypted",
+      "conditions": [
+        {
+          "attribute": "device_encrypted",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Unpatched devices stay out of sensitive systems",
+      "description": "",
+      "priority": 20,
+      "effect": "deny",
+      "reason": "Device is missing security patches",
+      "conditions": [
+        {
+          "attribute": "device_patched",
+          "op": "eq",
+          "value": false
+        },
+        {
+          "attribute": "resource",
+          "op": "in",
+          "value": [
+            "finance",
+            "hr"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Guests may use the wiki",
+      "description": "",
+      "priority": 30,
+      "effect": "allow",
+      "reason": "Guest access to the wiki",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "guest"
+        },
+        {
+          "attribute": "resource",
+          "op": "eq",
+          "value": "wiki"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Guests blocked elsewhere",
+      "description": "",
+      "priority": 35,
+      "effect": "deny",
+      "reason": "Guests may only access the wiki",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "guest"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "contractor"
+        },
+        {
+          "attribute": "resource",
+          "op": "in",
+          "value": [
+            "finance",
+            "hr"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Contractors on managed devices",
+      "description": "",
+      "priority": 50,
+      "effect": "allow",
+      "reason": "Contractor on a company-managed device",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "contractor"
+        },
+        {
+          "attribute": "device_managed",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Employees and admins",
+      "description": "",
+      "priority": 60,
+      "effect": "allow",
+      "reason": "Employee access",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "in",
+          "value": [
+            "employee",
+            "admin"
+          ]
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "employee on a healthy managed laptop",
+      "request": {
+        "user": "priya.employee",
+        "device_id": "pri-100",
+        "role": "employee",
+        "resource": "email",
+        "location": "office",
+        "device_managed": true,
+        "device_encrypted": true,
+        "device_patched": true,
+        "hour": 10
+      },
+      "expected": {
+        "effect": "allow",
+        "policy_id": 7
+      }
+    },
+    {
+      "name": "unencrypted disk is quarantined first",
+      "request": {
+        "user": "priya.employee",
+        "device_id": "pri-100",
+        "role": "employee",
+        "resource": "email",
+        "location": "office",
+        "device_managed": true,
+        "device_encrypted": false,
+        "device_patched": true,
+        "hour": 10
+      },
+      "expected": {
+        "effect": "quarantine",
+        "policy_id": 1
+      }
+    },
+    {
+      "name": "unpatched device kept out of finance",
+      "request": {
+        "user": "priya.employee",
+        "device_id": "pri-100",
+        "role": "employee",
+        "resource": "finance",
+        "location": "office",
+        "device_managed": true,
+        "device_encrypted": true,
+        "device_patched": false,
+        "hour": 10
+      },
+      "expected": {
+        "effect": "deny",
+        "policy_id": 2
+      }
+    },
+    {
+      "name": "unpatched device can still read email",
+      "request": {
+        "user": "priya.employee",
+        "device_id": "pri-100",
+        "role": "employee",
+        "resource": "email",
+        "location": "office",
+        "device_managed": true,
+        "device_encrypted": true,
+        "device_patched": false,
+        "hour": 10
+      },
+      "expected": {
+        "effect": "allow",
+        "policy_id": 7
+      }
+    },
+    {
+      "name": "guest on the wiki",
+      "request": {
+        "user": "priya.employee",
+        "device_id": "pri-100",
+        "role": "guest",
+        "resource": "wiki",
+        "location": "office",
+        "device_managed": true,
+        "device_encrypted": true,
+        "device_patched": true,
+        "hour": 10
+      },
+      "expected": {
+        "effect": "allow",
+        "policy_id": 3
+      }
+    },
+    {
+      "name": "guest anywhere else",
+      "request": {
+        "user": "priya.employee",
+        "device_id": "pri-100",
+        "role": "guest",
+        "resource": "engineering",
+        "location": "office",
+        "device_managed": true,
+        "device_encrypted": true,
+        "device_patched": true,
+        "hour": 10
+      },
+      "expected": {
+        "effect": "deny",
+        "policy_id": 4
+      }
+    },
+    {
+      "name": "contractor to HR",
+      "request": {
+        "user": "priya.employee",
+        "device_id": "pri-100",
+        "role": "contractor",
+        "resource": "hr",
+        "location": "office",
+        "device_managed": true,
+        "device_encrypted": true,
+        "device_patched": true,
+        "hour": 10
+      },
+      "expected": {
+        "effect": "deny",
+        "policy_id": 5
+      }
+    },
+    {
+      "name": "contractor on a managed device",
+      "request": {
+        "user": "priya.employee",
+        "device_id": "pri-100",
+        "role": "contractor",
+        "resource": "engineering",
+        "location": "office",
+        "device_managed": true,
+        "device_encrypted": true,
+        "device_patched": true,
+        "hour": 10
+      },
+      "expected": {
+        "effect": "allow",
+        "policy_id": 6
+      }
+    },
+    {
+      "name": "contractor on a personal device hits default deny",
+      "request": {
+        "user": "priya.employee",
+        "device_id": "pri-100",
+        "role": "contractor",
+        "resource": "engineering",
+        "location": "office",
+        "device_managed": false,
+        "device_encrypted": true,
+        "device_patched": true,
+        "hour": 10
+      },
+      "expected": {
+        "effect": "deny",
+        "policy_id": null
+      }
+    },
+    {
+      "name": "admin working remotely late",
+      "request": {
+        "user": "priya.employee",
+        "device_id": "pri-100",
+        "role": "admin",
+        "resource": "hr",
+        "location": "remote",
+        "device_managed": true,
+        "device_encrypted": true,
+        "device_patched": true,
+        "hour": 23
+      },
+      "expected": {
+        "effect": "allow",
+        "policy_id": 7
+      }
+    }
+  ]
+}
