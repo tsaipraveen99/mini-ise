@@ -1,0 +1,82 @@
+# Admin-facing API. Not on the decision path, so one replica is enough.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: policy-api
+  namespace: mini-ise
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: policy-api
+  template:
+    metadata:
+      labels:
+        app: policy-api
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: policy-api
+          image: mini-ise-backend:dev
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "mini_ise.policy_api:app", "--host", "0.0.0.0", "--port", "8001"]
+          ports:
+            - name: http
+              containerPort: 8001
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: DATABASE_URL
+            # Optional: without a key the app runs and AI drafting reports it is off.
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: anthropic
+                  key: ANTHROPIC_API_KEY
+                  optional: true
+          # Startup waits for Postgres (up to 30s); give it time before liveness applies.
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 2
+            failureThreshold: 45
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: policy-api
+  namespace: mini-ise
+spec:
+  selector:
+    app: policy-api
+  ports:
+    - name: http
+      port: 8001
+      targetPort: http

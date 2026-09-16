@@ -1,0 +1,89 @@
+# The hot path. Stateless, so it scales horizontally; the HPA in 60-autoscaling.yaml owns the replica count.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decision-service
+  namespace: mini-ise
+spec:
+  # No `replicas` field on purpose: re-applying this file would otherwise reset what the HPA chose.
+  selector:
+    matchLabels:
+      app: decision-service
+  template:
+    metadata:
+      labels:
+        app: decision-service
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      # Spread replicas across nodes so losing one node doesn't take out every replica.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: decision-service
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: decision-service
+          image: mini-ise-backend:dev
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "mini_ise.decision_service:app", "--host", "0.0.0.0", "--port", "8000"]
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: POD_NAME # shown in the console as "served by"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: DATABASE_URL
+          # Ready only once policies are in memory; until then the pod gets no traffic.
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          lifecycle:
+            # Keep serving briefly while the Service stops routing to this pod,
+            # so in-flight requests aren't dropped during scale-down or a pod kill.
+            preStop:
+              exec:
+                command: ["sleep", "5"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 96Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: decision-service
+  namespace: mini-ise
+spec:
+  selector:
+    app: decision-service
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

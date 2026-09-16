@@ -1,0 +1,25 @@
+# Adds decision-service pods when average CPU passes 50% of the 100m request.
+# Needs metrics-server (installed by `make metrics-server`).
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: decision-service
+  namespace: mini-ise
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: decision-service
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+  behavior:
+    scaleDown:
+      # Shorter than the 5 minute default so a demo can show scale-down too.
+      stabilizationWindowSeconds: 60

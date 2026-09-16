@@ -1,0 +1,12 @@
+# Local cluster: one control plane and two workers, so pods visibly spread across nodes.
+# NodePort 30080 (the console Service) is published on localhost:8080.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: mini-ise
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 8080
+  - role: worker
+  - role: worker

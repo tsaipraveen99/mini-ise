@@ -1,0 +1,76 @@
+# Postgres holds policies and the decision log.
+# Demo credentials only: a real deployment would use a managed database and a secret store.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres
+  namespace: mini-ise
+type: Opaque
+stringData:
+  POSTGRES_USER: mini_ise
+  POSTGRES_PASSWORD: mini-ise-demo
+  POSTGRES_DB: mini_ise
+  DATABASE_URL: postgresql://mini_ise:mini-ise-demo@postgres:5432/mini_ise
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: mini-ise
+spec:
+  clusterIP: None # headless: DNS points straight at the StatefulSet pod
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: mini-ise
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          ports:
+            - name: postgres
+              containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: postgres
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "mini_ise"]
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

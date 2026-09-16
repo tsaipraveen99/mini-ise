@@ -1,0 +1,44 @@
+# Fake devices. Change the load live with: make load-high / make load-normal
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simulator
+  namespace: mini-ise
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simulator
+  template:
+    metadata:
+      labels:
+        app: simulator
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: simulator
+          image: mini-ise-backend:dev
+          imagePullPolicy: IfNotPresent
+          command: ["mini-ise-simulator"]
+          env:
+            - name: DECISION_URL
+              value: http://decision-service:8000
+            - name: RPS
+              value: "20"
+            - name: SECONDS_PER_HOUR
+              value: "20"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 96Mi
+            limits:
+              cpu: "1"
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
