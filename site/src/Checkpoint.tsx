@@ -150,7 +150,11 @@ export function Checkpoint({ compact = false }: { compact?: boolean }) {
   return (
     <section className={`checkpoint${compact ? ' checkpoint--compact' : ''}`} aria-label="Policy engine">
       <div className="cp-request">
-        <p className="cp-label">Access request</p>
+        <p className="cp-step">
+          <span className="cp-step-n">1</span>Describe the device
+        </p>
+        <p className="cp-help">Pick an example, or set each detail yourself.</p>
+        <p className="cp-sublabel">Examples</p>
         <div className="cp-presets" role="group" aria-label="Example requests">
           {PRESETS.map((preset) => (
             <button
@@ -203,7 +207,24 @@ export function Checkpoint({ compact = false }: { compact?: boolean }) {
       </div>
 
       <div className="cp-walk">
-        <p className="cp-label">Policies, checked in priority order. First match decides.</p>
+        <p className="cp-step">
+          <span className="cp-step-n">2</span>Policies are checked from the top
+        </p>
+        <p className="cp-help">The first policy where every condition is true decides. Nothing matching means deny.</p>
+        <ul className="cp-legend-row" aria-label="Legend">
+          <li>
+            <span className="cp-key cp-key--pass">✓</span> condition true
+          </li>
+          <li>
+            <span className="cp-key cp-key--fail">✗</span> condition false
+          </li>
+          <li>
+            <span className="cp-key cp-key--match" /> policy that decided
+          </li>
+          <li>
+            <span className="cp-key cp-key--faded" /> never reached
+          </li>
+        </ul>
         <ol className="cp-policies">
           {steps.map((step, index) => {
             const state = rowState(index)
@@ -244,6 +265,9 @@ export function Checkpoint({ compact = false }: { compact?: boolean }) {
       </div>
 
       <div className={`cp-verdict cp-verdict--${done ? decision.effect : 'pending'}`} aria-live="polite">
+        <p className="cp-step cp-step--verdict">
+          <span className="cp-step-n">3</span>Decision
+        </p>
         {done ? (
           <>
             <span className="cp-stamp">{decision.effect}</span>

@@ -1,24 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
+import { EnginePage } from './EnginePage'
 import { Landing } from './Landing'
+import { routeOf, useHash } from './router'
 import { Slides } from './Slides'
 
-function useHash(): string {
-  const [hash, setHash] = useState(() => window.location.hash)
-  useEffect(() => {
-    const onChange = () => setHash(window.location.hash)
-    window.addEventListener('hashchange', onChange)
-    return () => window.removeEventListener('hashchange', onChange)
-  }, [])
-  return hash
+const TITLES = {
+  landing: 'Mini ISE: network access control, built small',
+  engine: 'Policy engine · Mini ISE',
 }
 
 export default function App() {
   const hash = useHash()
-  const onSlides = hash.startsWith('#/slides')
+  const route = routeOf(hash)
 
   useEffect(() => {
-    if (!onSlides) document.title = 'Mini ISE: zero-trust network access, built small'
-  }, [onSlides])
+    if (route !== 'slides') document.title = TITLES[route]
+  }, [route])
 
-  return onSlides ? <Slides hash={hash} /> : <Landing />
+  if (route === 'slides') return <Slides hash={hash} />
+  if (route === 'engine') return <EnginePage />
+  return <Landing />
 }

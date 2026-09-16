@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Checkpoint } from './Checkpoint'
 import { AUTHOR, BOOTCAMP, REPO, SITE } from './content'
+import { LogoMark } from './Logo'
 
 interface Slide {
   title: string
@@ -13,6 +14,7 @@ const SLIDES: Slide[] = [
     title: 'Mini ISE',
     body: (
       <div className="s-title">
+        <LogoMark className="s-logo" />
         <p className="s-eyebrow">Zero-trust network access, built small</p>
         <h1 className="s-display">Mini ISE</h1>
         <p className="s-lede">Who gets on the network, and why.</p>
@@ -135,14 +137,24 @@ const SLIDES: Slide[] = [
         <h2 className="s-heading">One request, two paths</h2>
         <div className="s-paths">
           <div>
-            <h3>Enforcement</h3>
-            <p className="s-tag">every request · no network calls</p>
-            <p className="s-chain">Device → decision service → policies in memory → verdict</p>
+            <h3>Checking a device</h3>
+            <p className="s-tag">every connection · no outside calls</p>
+            <ol className="s-chain">
+              <li>Device asks</li>
+              <li>Decision service</li>
+              <li>Policies in memory</li>
+              <li>Allow, quarantine or deny</li>
+            </ol>
           </div>
           <div>
-            <h3>Administration</h3>
+            <h3>Writing a policy</h3>
             <p className="s-tag">a few times a week</p>
-            <p className="s-chain">Admin → Claude drafts → validation → admin approves → Postgres</p>
+            <ol className="s-chain">
+              <li>Admin describes a rule</li>
+              <li>Claude drafts it</li>
+              <li>Draft is validated</li>
+              <li>Admin approves</li>
+            </ol>
           </div>
         </div>
       </div>
@@ -284,9 +296,11 @@ function isTyping(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && target.closest('input, textarea, select, [contenteditable="true"]') !== null
 }
 
-function SlideFrame({ slide, index }: { slide: Slide; index: number }) {
+type Direction = 'forward' | 'back' | 'none'
+
+function SlideFrame({ slide, index, direction = 'none' }: { slide: Slide; index: number; direction?: Direction }) {
   return (
-    <article className="slide" aria-label={`Slide ${index + 1}: ${slide.title}`}>
+    <article className={`slide slide--enter-${direction}`} aria-label={`Slide ${index + 1}: ${slide.title}`}>
       {slide.body}
       <footer className="slide-foot">
         <span>Mini ISE</span>
@@ -302,12 +316,15 @@ export function Slides({ hash }: { hash: string }) {
   const printing = hash === '#/slides/print'
   const index = parseIndex(hash)
   const [showNotes, setShowNotes] = useState(false)
+  const [direction, setDirection] = useState<Direction>('none')
 
   // Reads the slide from the URL at call time, so fast repeated key presses each advance one slide.
   const go = useCallback((target: number | ((current: number) => number)) => {
     const current = parseIndex(window.location.hash)
     const next = typeof target === 'function' ? target(current) : target
     const clamped = Math.min(Math.max(next, 0), SLIDES.length - 1)
+    if (clamped === current) return
+    setDirection(clamped > current ? 'forward' : 'back')
     window.location.hash = `#/slides/${clamped + 1}`
   }, [])
 
@@ -365,11 +382,24 @@ export function Slides({ hash }: { hash: string }) {
   const slide = SLIDES[index]
   return (
     <div className={`deck${showNotes ? ' deck--notes' : ''}`}>
+      <div
+        className="deck-progress"
+        role="progressbar"
+        aria-label="Slide progress"
+        aria-valuemin={1}
+        aria-valuemax={SLIDES.length}
+        aria-valuenow={index + 1}
+      >
+        <span style={{ width: `${((index + 1) / SLIDES.length) * 100}%` }} />
+      </div>
       <div className="stage">
-        <SlideFrame slide={slide} index={index} />
+        <SlideFrame key={index} slide={slide} index={index} direction={direction} />
       </div>
       <div className="deck-bar">
-        <a href="#top">Mini ISE site</a>
+        <a href="#top" className="deck-home">
+          <LogoMark className="deck-logo" title="" />
+          Back to the site
+        </a>
         <div className="deck-nav">
           <button type="button" onClick={() => go(index - 1)} disabled={index === 0}>
             Previous
@@ -382,6 +412,7 @@ export function Slides({ hash }: { hash: string }) {
           </button>
         </div>
         <div className="deck-tools">
+          <span className="deck-hint">← → to move · F full screen</span>
           <button type="button" onClick={() => setShowNotes((v) => !v)} aria-pressed={showNotes}>
             Notes (N)
           </button>
