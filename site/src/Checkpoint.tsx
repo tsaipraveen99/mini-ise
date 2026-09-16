@@ -8,6 +8,7 @@ import {
   formatHour,
   traceDecision,
   type AccessRequest,
+  type Policy,
 } from './engine'
 
 const STEP_MS = 150
@@ -104,9 +105,15 @@ function Segmented<T extends string>({
   )
 }
 
-export function Checkpoint({ compact = false }: { compact?: boolean }) {
+export function Checkpoint({
+  compact = false,
+  policies = SEED_POLICIES,
+}: {
+  compact?: boolean
+  policies?: readonly Policy[]
+}) {
   const [request, setRequest] = useState<AccessRequest>(PRESETS[0].request)
-  const trace = useMemo(() => traceDecision(SEED_POLICIES, request), [request])
+  const trace = useMemo(() => traceDecision(policies, request), [policies, request])
   const { steps, matchIndex, decision } = trace
   // The walk visits every policy up to the first match, then the default row if nothing matched.
   const finalCursor = matchIndex >= 0 ? matchIndex + 1 : steps.length + 1
@@ -230,10 +237,13 @@ export function Checkpoint({ compact = false }: { compact?: boolean }) {
             const state = rowState(index)
             const evaluated = state === 'miss' || state === 'match'
             return (
-              <li key={step.policy.id} className={`cp-row is-${state}`}>
+              <li key={step.policy.id} className={`cp-row is-${state}${step.policy.source === 'ai' ? ' cp-row--yours' : ''}`}>
                 <span className="cp-priority">{step.policy.priority}</span>
                 <div className="cp-row-main">
-                  <span className="cp-row-name">{step.policy.name}</span>
+                  <span className="cp-row-name">
+                    {step.policy.name}
+                    {step.policy.source === 'ai' && <span className="cp-yours">your rule</span>}
+                  </span>
                   <ul className="cp-conds">
                     {step.policy.conditions.map((condition, i) => (
                       <li key={i} className={evaluated ? (step.results[i] ? 'is-pass' : 'is-fail') : ''}>

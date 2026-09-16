@@ -1,0 +1,486 @@
+[
+  {
+    "name": "seed policy",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "contractor"
+        },
+        {
+          "attribute": "resource",
+          "op": "in",
+          "value": [
+            "finance",
+            "hr"
+          ]
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "after-hours rule",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "contractor"
+        },
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 18
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "no conditions",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": []
+    },
+    "valid": false
+  },
+  {
+    "name": "eleven conditions",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 1
+        },
+        {
+          "attribute": "hour",
+          "op": "gte",
+          "value": 1
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "priority zero",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 0,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "contractor"
+        },
+        {
+          "attribute": "resource",
+          "op": "in",
+          "value": [
+            "finance",
+            "hr"
+          ]
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "priority over 1000",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 1001,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "contractor"
+        },
+        {
+          "attribute": "resource",
+          "op": "in",
+          "value": [
+            "finance",
+            "hr"
+          ]
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown role value",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "ceo"
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "comparison on role",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "gte",
+          "value": "employee"
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "hour out of range",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "hour",
+          "op": "lt",
+          "value": 24
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "hour given as boolean",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "hour",
+          "op": "eq",
+          "value": true
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "in with a single string",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "resource",
+          "op": "in",
+          "value": "finance"
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "in with an empty list",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "resource",
+          "op": "in",
+          "value": []
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "device flag as string",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "device_managed",
+          "op": "eq",
+          "value": "yes"
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "comparison on device flag",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "device_patched",
+          "op": "lt",
+          "value": true
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown attribute",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "salary",
+          "op": "eq",
+          "value": 1
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown effect",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "maybe",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "contractor"
+        },
+        {
+          "attribute": "resource",
+          "op": "in",
+          "value": [
+            "finance",
+            "hr"
+          ]
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "empty name",
+    "policy": {
+      "name": "",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "contractor"
+        },
+        {
+          "attribute": "resource",
+          "op": "in",
+          "value": [
+            "finance",
+            "hr"
+          ]
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "reason too long",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "contractor"
+        },
+        {
+          "attribute": "resource",
+          "op": "in",
+          "value": [
+            "finance",
+            "hr"
+          ]
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "missing reason",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "conditions": [
+        {
+          "attribute": "role",
+          "op": "eq",
+          "value": "contractor"
+        },
+        {
+          "attribute": "resource",
+          "op": "in",
+          "value": [
+            "finance",
+            "hr"
+          ]
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "device flag not-equal",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "device_encrypted",
+          "op": "neq",
+          "value": true
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "not_in list",
+    "policy": {
+      "name": "Contractors blocked from finance and HR",
+      "description": "",
+      "priority": 40,
+      "effect": "deny",
+      "reason": "Contractors cannot access finance or HR",
+      "conditions": [
+        {
+          "attribute": "location",
+          "op": "not_in",
+          "value": [
+            "office"
+          ]
+        }
+      ]
+    },
+    "valid": true
+  }
+]

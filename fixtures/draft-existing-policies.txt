@@ -1,0 +1,7 @@
+- priority 10: Quarantine unencrypted devices -> quarantine
+- priority 20: Unpatched devices stay out of sensitive systems -> deny
+- priority 30: Guests may use the wiki -> allow
+- priority 35: Guests blocked elsewhere -> deny
+- priority 40: Contractors blocked from finance and HR -> deny
+- priority 50: Contractors on managed devices -> allow
+- priority 60: Employees and admins -> allow

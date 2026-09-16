@@ -2,24 +2,10 @@
 // real decisions without a server. engine.test.ts runs the shared cases in fixtures/ that the
 // Python tests also run, which keeps the two implementations from drifting apart.
 import shared from '../../fixtures/policy-cases.json'
+import type { Attribute, Effect, Location, Op, Resource, Role } from './vocab'
 
-export const ROLES = ['employee', 'contractor', 'guest', 'admin'] as const
-export const RESOURCES = ['email', 'wiki', 'engineering', 'finance', 'hr'] as const
-export const LOCATIONS = ['office', 'remote'] as const
-
-export type Role = (typeof ROLES)[number]
-export type Resource = (typeof RESOURCES)[number]
-export type Location = (typeof LOCATIONS)[number]
-export type Effect = 'allow' | 'deny' | 'quarantine'
-export type Attribute =
-  | 'role'
-  | 'resource'
-  | 'location'
-  | 'device_managed'
-  | 'device_encrypted'
-  | 'device_patched'
-  | 'hour'
-export type Op = 'eq' | 'neq' | 'in' | 'not_in' | 'gte' | 'lt'
+export { LOCATIONS, RESOURCES, ROLES } from './vocab'
+export type { Attribute, Effect, Location, Op, Resource, Role } from './vocab'
 
 export interface Condition {
   attribute: Attribute
@@ -36,6 +22,8 @@ export interface Policy {
   reason: string
   conditions: Condition[]
   enabled?: boolean
+  /** 'ai' marks a rule a visitor drafted with Claude and approved in this tab. */
+  source?: string
 }
 
 export interface AccessRequest {

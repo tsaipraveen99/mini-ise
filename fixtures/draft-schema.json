@@ -1,0 +1,125 @@
+{
+  "type": "object",
+  "properties": {
+    "feasible": {
+      "type": "boolean"
+    },
+    "explanation": {
+      "type": "string"
+    },
+    "interpretation": {
+      "type": "string"
+    },
+    "suggestions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "policy": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "priority": {
+              "type": "integer"
+            },
+            "effect": {
+              "type": "string",
+              "enum": [
+                "allow",
+                "deny",
+                "quarantine"
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "attribute": {
+                    "type": "string",
+                    "enum": [
+                      "role",
+                      "resource",
+                      "location",
+                      "device_managed",
+                      "device_encrypted",
+                      "device_patched",
+                      "hour"
+                    ]
+                  },
+                  "op": {
+                    "type": "string",
+                    "enum": [
+                      "eq",
+                      "neq",
+                      "in",
+                      "not_in",
+                      "gte",
+                      "lt"
+                    ]
+                  },
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "attribute",
+                  "op",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "name",
+            "description",
+            "priority",
+            "effect",
+            "reason",
+            "conditions"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "feasible",
+    "explanation",
+    "interpretation",
+    "suggestions",
+    "policy"
+  ],
+  "additionalProperties": false
+}
