@@ -447,8 +447,7 @@ function points(slide, items) {
   s.addNotes(
     'Here’s the architecture. Top row: the React console, TypeScript, that’s where admins live. It talks to a policy API written in Python with FastAPI, which reads and writes policies in Postgres.\n\n' +
     'Bottom row, completely separate: the decision service. Also Python, also FastAPI. That’s the one answering access requests. I’ve got a simulator throwing realistic device traffic at it so there’s something to watch.\n\n' +
-    'The important thing is that those are two separate services, and that was deliberate. The policy API is used by a handful of admins clicking buttons. The decision service answers thousands of requests a second. They have nothing in common in terms of load, so they shouldn’t share a fate — if an admin runs an expensive report, it should not slow down the front door.\n\n' +
-    'Different load shapes, so a problem in one never becomes a problem in the other.',
+    'The important thing is that those are two separate services, and that was deliberate. The policy API is used by a handful of admins clicking buttons. The decision service answers thousands of requests a second. They have nothing in common in terms of load, so they shouldn’t share a fate — if an admin runs an expensive report, it should not slow down the front door. That’s what people mean by blast radius — how much of the system goes down when one part of it does.',
   )
 }
 

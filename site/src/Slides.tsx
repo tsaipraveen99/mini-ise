@@ -150,8 +150,7 @@ const SLIDES: Slide[] = [
     notes: [
       'So, here’s the architecture. Top row: the React console, TypeScript, that’s where admins live. It talks to a policy API written in Python with FastAPI, which reads and writes policies in Postgres.',
       'Bottom row, completely separate: the decision service. Also Python, also FastAPI. That’s the one answering access requests. I’ve got a simulator throwing realistic device traffic at it so there’s something to watch.',
-      'The important thing is that those are two separate services, and that was deliberate. The policy API is used by a handful of admins clicking buttons. The decision service answers thousands of requests a second. They have nothing in common in terms of load, so they shouldn’t share a fate — if an admin runs an expensive report, it should not slow down the front door.',
-      'Different load shapes, so a problem in one never becomes a problem in the other.',
+      'The important thing is that those are two separate services, and that was deliberate. The policy API is used by a handful of admins clicking buttons. The decision service answers thousands of requests a second. They have nothing in common in terms of load, so they shouldn’t share a fate — if an admin runs an expensive report, it should not slow down the front door. That’s what people mean by blast radius — how much of the system goes down when one part of it does.',
     ],
   },
   {
@@ -302,7 +301,7 @@ const SLIDES: Slide[] = [
       'I can’t bring a Kubernetes cluster into this room, so this is a simulation — it says so on the slide. The code that really does this is in the repo, and it’s one make command.',
       'Here we are at normal load: two pods, CPU comfortable. Now I’ll turn the load up — that’s make load-high.',
       'CPU crosses the target, and the autoscaler starts pods. Notice the new ones come up dashed — they are not taking traffic yet, because they still have to load their policies and pass the readiness check. That’s the detail that stops a scale-up causing a burst of denials.',
-      'And now let me kill one. Kubernetes notices immediately and starts a replacement, which also has to pass readiness before it gets traffic. The decision count on the other pods never stops climbing — that’s the blast radius idea, live.',
+      'And now let me kill one. Kubernetes notices immediately and starts a replacement, which also has to pass readiness before it gets traffic. The decision count on the other pods never stops climbing — losing one costs a sixth of the capacity, not all of it.',
     ],
   },
   {

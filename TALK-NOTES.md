@@ -167,7 +167,8 @@ The decision service answers thousands of requests a second. They have
 nothing in common in terms of load, so they shouldn't share a fate — if an
 admin runs an expensive report, it should not slow down the front door.
 
-That's the blast radius idea from two slides ago, applied.
+That's what people mean by **blast radius** — how much of the system goes down
+when one part of it does.
 
 ---
 
@@ -263,8 +264,8 @@ would cause a burst of denials, which is worse than being slow.
 
 Second — **self-healing**. If I delete a pod right now, and it's one command,
 Kubernetes notices and starts a replacement, and traffic keeps flowing the
-whole time because the other pods are still answering. That's the blast
-radius payoff, live.
+whole time because the other pods are still answering. Losing one pod costs a
+sixth of the capacity, not all of it.
 
 And you can watch all of it in the console — it shows decisions per pod, so
 you literally see new pods start taking work.
@@ -288,8 +289,8 @@ stops a scale-up causing a burst of denials.
 
 And now let me kill one. Kubernetes notices immediately and starts a
 replacement, which also has to pass readiness before it gets traffic. The
-decision count on the other pods never stops climbing — that's the blast
-radius idea, live.
+decision count on the other pods never stops climbing — losing one costs a
+sixth of the capacity, not all of it.
 
 *(**Start** → **Load: high** → wait for six pods → **Kill a pod**. **Reset**
 puts it back to two if you want to run it twice.)*
