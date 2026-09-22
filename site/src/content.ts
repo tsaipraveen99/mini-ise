@@ -13,3 +13,6 @@ export const repoFile = (path: string) => `${REPO}/blob/main/${path}`
 
 // Shown on the title slide when set.
 export const BOOTCAMP = ''
+
+// Shown on the splash before the deck opens. Kept in step with SLIDES in Slides.tsx.
+export const SLIDE_COUNT = 11

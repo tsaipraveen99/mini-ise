@@ -1,13 +1,13 @@
 import { useState, type MouseEvent, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
-import { AUTHOR, REPO } from './content'
+import { AUTHOR, REPO, SLIDE_COUNT } from './content'
 import { Logo } from './Logo'
 import { navigate, routeOf } from './router'
 import { closeSplash, getSplash, setSplash, splashDuration, wait } from './splashStore'
 
 const SPLASH_COPY = {
   engine: { title: 'Opening the policy engine', detail: 'Loading the rules and live AI drafting' },
-  slides: { title: 'Opening the slides', detail: '13 slides · use ← → to move' },
+  slides: { title: 'Opening the slides', detail: `${SLIDE_COUNT} slides · use ← → to move` },
   landing: { title: 'Back to the overview', detail: 'Mini ISE' },
 }
 

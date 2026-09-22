@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { Checkpoint } from './Checkpoint'
 import { PageLink } from './Chrome'
-import { AUTHOR, BOOTCAMP, REPO, SITE } from './content'
+import { AUTHOR, BOOTCAMP, REPO, SITE, SLIDE_COUNT } from './content'
+import { ArchitectureDiagram, AutoscaleDiagram, StateDiagram, UpOrOutDiagram } from './Diagrams'
+import { LiveAutoscale, LiveDecisions } from './Demos'
 import { LogoMark } from './Logo'
 
 interface Slide {
   title: string
   body: ReactNode
-  notes: string
+  /** Spoken script, one entry per paragraph. Kept close to TALK-NOTES.md at the repo root. */
+  notes: string[]
 }
 
 const SLIDES: Slide[] = [
@@ -25,252 +27,198 @@ const SLIDES: Slide[] = [
         </p>
       </div>
     ),
-    notes:
-      'Hi, I’m Sai. For the next ten minutes: a small version of the software companies use to decide which laptops and phones get onto their network. There’s a live demo in the middle.',
+    notes: [
+      'Hi, I’m Sai. For the next ten minutes I want to show you something I built called Mini ISE — a small version of the software that decides which laptops and phones are allowed onto a company network.',
+      'I’m going to do this slightly backwards. First, two slides on how you actually add capacity to a system — because there is one idea in there that decides everything else. Then I’ll show you the thing I built, and you’ll see that idea doing real work.',
+    ],
   },
   {
-    title: 'The old way',
+    title: 'Up or out',
     body: (
-      <div className="s-split">
-        <div>
-          <h2 className="s-heading">The old way was a castle.</h2>
-          <ul className="s-list">
-            <li>Get inside the office network once</li>
-            <li>Reach almost everything after that</li>
-            <li>One stolen laptop can wander freely</li>
-          </ul>
-        </div>
-        <div className="s-castle" aria-hidden="true">
-          <div className="s-castle-wall">
-            <span>email</span>
-            <span>wiki</span>
-            <span>finance</span>
-            <span>hr</span>
-          </div>
-          <p>inside the wall = trusted</p>
-        </div>
+      <div className="s-diagram-slide">
+        <h2 className="s-heading s-heading--small">Up, or out</h2>
+        <UpOrOutDiagram />
+        <ul className="s-diagram-points">
+          <li>Up: no code changes, hard ceiling</li>
+          <li>Out: no ceiling, real complexity</li>
+          <li>Go up first. It is usually enough.</li>
+        </ul>
       </div>
     ),
-    notes:
-      'For a long time, office security worked like a castle. If your laptop was plugged into the office network, it was trusted and could reach nearly everything. The problem: if an attacker gets in once, through one laptop, they can move around freely.',
+    notes: [
+      'Before I show you anything I built, I want to set up the one idea the whole project rests on.',
+      'Every service that gets used hits the same wall eventually: more requests arriving than one machine can answer. And when you need more capacity, there are only two moves.',
+      'Up — vertical scaling. Buy a bigger machine. More cores, more memory. The big advantage is that your code doesn’t change at all; it’s close to a config line. The disadvantages are that there’s a hard ceiling — there is a biggest machine you can rent — it gets expensive quickly at the top end, and it’s still one machine. When it dies, all of it dies.',
+      'Out — horizontal scaling. Buy more machines. There’s no real ceiling, the cost per unit is lower, and losing one costs you a fraction of your capacity instead of all of it. The price is complexity: now you need a load balancer, you need to cope with machines appearing and disappearing, and your application has to stop caring which machine it lands on.',
+      'And the honest advice that most companies actually follow is: go up first. It’s simpler, and it’s usually enough for longer than people expect. Go out when you hit the ceiling, or when one machine being one outage stops being acceptable.',
+    ],
   },
   {
-    title: 'Zero trust',
+    title: 'State decides',
+    body: (
+      <div className="s-diagram-slide">
+        <h2 className="s-heading s-heading--small">State decides which one you can do</h2>
+        <StateDiagram />
+        <ul className="s-diagram-points">
+          <li>Stateless: start a copy, done</li>
+          <li>Stateful: replicate, shard, agree</li>
+          <li>So push state out of what you scale</li>
+        </ul>
+      </div>
+    ),
+    notes: [
+      'Except you don’t always get to choose. And the thing that decides it is state — whether a machine remembers anything between requests.',
+      'If your service is stateless, any machine can answer any request. Adding capacity is nearly trivial: start another copy, point the load balancer at it, done. Web servers and API servers are usually like this.',
+      'If it’s stateful, it’s a completely different problem. A specific piece of data lives on a specific machine, and the request has to find it. That’s where the hard techniques come in — replication, so there’s more than one copy; sharding, so the data is split by key; and consensus, so the copies agree on what’s actually true.',
+      'Databases are the classic stateful thing, and this is exactly why scaling a database is a genuinely hard problem while scaling a web tier is mostly a config change.',
+      'So the real design move — the one that matters — is to push state out of the things you want to scale, and concentrate it in as few places as you can.',
+    ],
+  },
+  {
+    title: 'What it is',
     body: (
       <div>
-        <h2 className="s-heading">Zero trust: check every request.</h2>
-        <div className="s-rules">
-          <div>
-            <h3>Every request, every time</h3>
-            <p>Being inside the network earns nothing.</p>
-          </div>
-          <div>
-            <h3>Decide with context</h3>
-            <p>Who you are, which device, how healthy it is, where, when.</p>
-          </div>
-          <div>
-            <h3>Least access that works</h3>
-            <p>A contractor gets the wiki, not the finance servers.</p>
-          </div>
-        </div>
-        <p className="s-footnote">It isn’t “trust nobody”. It’s “yes, but only to this, because we checked”.</p>
-      </div>
-    ),
-    notes:
-      'Zero trust replaces the castle with three rules. Check every request, not just once at the door. Decide using context: the user, their device, whether it is patched and encrypted, where they are, what time it is. And give the least access that works. People often hear zero trust as trust nobody. It is really: yes, but only to this, because we checked.',
-  },
-  {
-    title: 'What I built',
-    body: (
-      <div>
-        <h2 className="s-heading">A device asks. The service answers, with a reason.</h2>
-        <div className="s-verdicts">
-          <div className="s-verdict s-verdict--allow">
-            <span>Allow</span>
-            <p>Employee on a patched company laptop reaches email</p>
-          </div>
-          <div className="s-verdict s-verdict--quarantine">
-            <span>Quarantine</span>
-            <p>Laptop with an unencrypted disk gets limited access until it’s fixed</p>
-          </div>
-          <div className="s-verdict s-verdict--deny">
-            <span>Deny</span>
-            <p>Contractor on a personal laptop tries to reach finance</p>
-          </div>
-        </div>
-      </div>
-    ),
-    notes:
-      'So I built Mini ISE. A device asks to reach something, and the service answers one of three things: allow, quarantine, which means limited access until the device is fixed, or deny. Every answer comes with a reason, which matters when someone asks why they were blocked.',
-  },
-  {
-    title: 'Try it',
-    body: (
-      <div className="s-try">
-        <h2 className="s-heading s-heading--small">Try it: change the request</h2>
-        <Checkpoint compact />
-      </div>
-    ),
-    notes:
-      'This is the real engine running right here in the slide. Policies are checked from the top, and the first one that matches decides. Watch: I switch to a contractor on a personal laptop at 7pm, and it walks down the list until contractors blocked from finance matches. If nothing matches at all, the answer is deny. Zero trust never lets anything in by default.',
-  },
-  {
-    title: 'Live demo',
-    body: (
-      <div>
-        <h2 className="s-heading">Live demo</h2>
-        <ol className="s-steps">
-          <li>Decisions streaming in from simulated devices</li>
-          <li>Type a rule in plain English and get a drafted policy</li>
-          <li>Approve it and watch decisions change</li>
-          <li>Add load and watch Kubernetes add pods</li>
-          <li>Delete a pod and watch it come back</li>
-        </ol>
-      </div>
-    ),
-    notes:
-      'Switch to the console now. One: decisions streaming in. Two: type contractors cannot reach finance after 6pm and show the draft, including the I understood line. Three: approve it and point at new deny rows. Four: run make load-high and watch the pod count climb. Five: run make kill-decision-pod. If the network fails, use the recording.',
-  },
-  {
-    title: 'Two paths',
-    body: (
-      <div>
-        <h2 className="s-heading">One request, two paths</h2>
-        <div className="s-paths">
-          <div>
-            <h3>Checking a device</h3>
-            <p className="s-tag">every connection · no outside calls</p>
-            <ol className="s-chain">
-              <li>Device asks</li>
-              <li>Decision service</li>
-              <li>Policies in memory</li>
-              <li>Allow, quarantine or deny</li>
-            </ol>
-          </div>
-          <div>
-            <h3>Writing a policy</h3>
-            <p className="s-tag">a few times a week</p>
-            <ol className="s-chain">
-              <li>Admin describes a rule</li>
-              <li>Claude drafts it</li>
-              <li>Draft is validated</li>
-              <li>Admin approves</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    ),
-    notes:
-      'Under the hood there are two separate paths. The enforcement path runs on every single request, so it makes no network calls at all: policies live in memory and refresh every few seconds. The administration path is where people write rules, a few times a week, and that is the only place the AI appears.',
-  },
-  {
-    title: 'Where AI fits',
-    body: (
-      <div className="s-center">
-        <p className="s-eyebrow">Where the AI fits</p>
-        <p className="s-statement">
-          AI drafts.
-          <br />A person approves.
-          <br />
-          Code enforces.
-        </p>
-      </div>
-    ),
-    notes:
-      'This is the one line I would like you to remember. The AI turns plain English into a draft policy. A person approves it. And plain code makes every decision.',
-  },
-  {
-    title: 'Why the model never decides',
-    body: (
-      <div>
-        <h2 className="s-heading">Why the model never decides</h2>
-        <div className="s-rules">
-          <div>
-            <h3>Audits</h3>
-            <p>Replay a denial and the answer must be the same. Models can answer differently each time.</p>
-          </div>
-          <div>
-            <h3>Outages</h3>
-            <p>If the AI provider is down, logins can’t stop. Enforcement calls nothing outside.</p>
-          </div>
-          <div>
-            <h3>Injection</h3>
-            <p>A device named “ignore your instructions” is just text to plain code.</p>
-          </div>
-        </div>
-      </div>
-    ),
-    notes:
-      'Why not let the AI decide? Three reasons. Audits: if an auditor replays last Tuesday’s denial, the answer has to be the same, and models can answer differently. Outages: if the AI provider goes down for twenty minutes at a hospital, doctors still need to log in. Injection: an attacker controls device names, and if that text reached a prompt it could become instructions.',
-  },
-  {
-    title: 'Asking it to allow everything',
-    body: (
-      <div className="s-split">
-        <div>
-          <p className="s-eyebrow">I typed</p>
-          <p className="s-quote">“Allow all the requests”</p>
-          <p className="s-eyebrow">It understood</p>
-          <p className="s-body">You want every access request permitted, with no conditions at all.</p>
-        </div>
-        <div className="s-refusal">
-          <p>
-            A blanket allow would match every request and override every other policy, plus the default deny. Every
-            policy needs at least one condition.
-          </p>
-          <p className="s-eyebrow">Try one of these instead</p>
-          <ul>
-            <li>Allow employees and admins on managed devices</li>
-            <li>Allow all roles to reach email and wiki</li>
-            <li>Allow requests from the office on encrypted devices</li>
-          </ul>
-        </div>
-      </div>
-    ),
-    notes:
-      'While testing I asked it to allow all requests. It said what it understood, explained why that would switch off zero trust, and suggested rules that are actually safe to write. And if the model ever ignores that instruction, the same validation that checks hand-written policies still blocks the draft.',
-  },
-  {
-    title: 'What Kubernetes adds',
-    body: (
-      <div>
-        <h2 className="s-heading">What Kubernetes adds</h2>
-        <div className="s-stats">
-          <div>
-            <span className="s-stat">2 → 6</span>
-            <p>decision pods within 15 seconds of heavy load</p>
-          </div>
-          <div>
-            <span className="s-stat">5 / 10k</span>
-            <p>requests failed while a pod was deleted and replaced</p>
-          </div>
-          <div>
-            <span className="s-stat">0</span>
-            <p>routes from the decision service to the internet</p>
-          </div>
-        </div>
-      </div>
-    ),
-    notes:
-      'Kubernetes gave me three things. Scaling: under heavy load, decision pods went from two to six in about fifteen seconds. Self-healing: I deleted a pod under load and a replacement was serving within seconds; five requests out of about ten thousand failed, and I would rather show that than claim zero. And network policies: the decision service literally cannot reach the internet.',
-  },
-  {
-    title: 'What I learned',
-    body: (
-      <div>
-        <h2 className="s-heading">What I learned</h2>
+        <h2 className="s-heading">A laptop asks. Something has to answer.</h2>
         <ul className="s-list s-list--roomy">
-          <li>Keep anything you don’t control off the critical path.</li>
-          <li>Treat AI output like any other untrusted input: validate it.</li>
           <li>
-            Kubernetes balances connections, not requests. New pods got no traffic until the simulator stopped
-            reusing connections.
+            <strong>Zero trust:</strong> every request checked, every time
+          </li>
+          <li>A device asks for access to a resource</li>
+          <li>
+            A service answers <strong>allow, deny or quarantine</strong> — always with a reason
+          </li>
+          <li>Admins manage the rules in a React console</li>
+        </ul>
+      </div>
+    ),
+    notes: [
+      'So that’s the theory. Here’s the thing I built, and it has exactly that problem.\n\nIn an old corporate network, once you were inside the building, you were trusted. Zero trust throws that out. Every single request gets checked, every time — it doesn’t matter that you checked thirty seconds ago.',
+      'Mini ISE does exactly that. A device shows up and asks: can this user, on this laptop, from this location, reach the finance database right now? And a service answers one of three things — allow, deny, or quarantine — and it always gives a reason.',
+      'That reason matters more than people expect. When someone gets locked out at nine in the morning, the help desk needs to know which rule did it.',
+      'On the other side, admins manage those rules in a React console, and they can watch decisions stream in live.',
+    ],
+  },
+  {
+    title: 'Live: decisions',
+    body: (
+      <div>
+        <h2 className="s-heading s-heading--small">Watch it decide</h2>
+        <LiveDecisions />
+      </div>
+    ),
+    notes: [
+      'Let me show you it actually working. These requests are invented — I’m generating fake devices — but the thing deciding is the real engine. It’s the same rule code the pods run, compiled to the browser, and it’s tested against the same set of cases in CI, so the two can’t quietly disagree.',
+      'Watch the reasons rather than the verdicts. Every answer names the rule that produced it.',
+      'And there’s the third verdict — quarantine. That’s not "we think you’re hacked". That’s a device that failed a posture check, usually an unencrypted disk. It gets a restricted segment where it can reach the tool that fixes it, and nothing else.',
+    ],
+  },
+  {
+    title: 'Architecture',
+    body: (
+      <div className="s-diagram-slide">
+        <h2 className="s-heading s-heading--small">How it’s put together</h2>
+        <ArchitectureDiagram />
+        <ul className="s-diagram-points">
+          <li>React + TypeScript console</li>
+          <li>Python + FastAPI services</li>
+          <li>Two services, different blast radius</li>
+        </ul>
+      </div>
+    ),
+    notes: [
+      'So, here’s the architecture. Top row: the React console, TypeScript, that’s where admins live. It talks to a policy API written in Python with FastAPI, which reads and writes policies in Postgres.',
+      'Bottom row, completely separate: the decision service. Also Python, also FastAPI. That’s the one answering access requests. I’ve got a simulator throwing realistic device traffic at it so there’s something to watch.',
+      'The important thing is that those are two separate services, and that was deliberate. The policy API is used by a handful of admins clicking buttons. The decision service answers thousands of requests a second. They have nothing in common in terms of load, so they shouldn’t share a fate — if an admin runs an expensive report, it should not slow down the front door.',
+      'Different load shapes, so a problem in one never becomes a problem in the other.',
+    ],
+  },
+  {
+    title: 'Holds no state',
+    body: (
+      <div>
+        <h2 className="s-heading">The decision service holds no state.</h2>
+        <ul className="s-list">
+          <li>Policies live in memory, refreshed every 3 seconds</li>
+          <li>A decision touches no network — zero database calls on the hot path</li>
+          <li>Logs are buffered and written in batches, capped at 10,000 rows</li>
+          <li>
+            Postgres dies → it keeps deciding. No policies yet → it <strong>denies</strong>.
+          </li>
+          <li>
+            No pod holds anything unique, so <strong>any pod can answer any request</strong>
           </li>
         </ul>
       </div>
     ),
-    notes:
-      'Three things I learned. Anything you do not control belongs off the critical path. AI output is untrusted input and gets validated like anything else. And a surprise: Kubernetes services balance connections, not requests, so when the autoscaler added pods they got no traffic until my simulator stopped reusing connections.',
+    notes: [
+      'And this is the design choice the whole thing rests on.',
+      'The policies live in memory, inside each pod. A background task refreshes them every three seconds. So when a request arrives, answering it touches no network at all — no database call, no cache lookup. It’s just Python evaluating rules against a request in memory. That’s how it stays under a millisecond.',
+      'The decision log still has to be written, obviously. But those rows get buffered and written to Postgres in batches, off the hot path. And the buffer is capped at ten thousand rows, so if the database goes away for an hour, the service doesn’t eat all its memory and fall over.',
+      'Two failure behaviours I want to call out, because I think they’re the interesting part. If Postgres disappears, the service keeps deciding, using the last policies it loaded. It degrades — it doesn’t stop. And if a pod hasn’t loaded its policies yet, it denies everything. It fails closed. In security, failing open is how you end up in the news.',
+      'The payoff: because no pod holds anything unique, any pod can answer any request. That’s the stateless property from earlier. Which means I can just add pods.',
+    ],
+  },
+  {
+    title: 'How it scales',
+    body: (
+      <div className="s-diagram-slide">
+        <h2 className="s-heading s-heading--small">So Kubernetes just adds pods</h2>
+        <AutoscaleDiagram />
+        <ul className="s-diagram-points">
+          <li>Autoscaler: 2 → 6 pods on CPU</li>
+          <li>Readiness before any traffic</li>
+          <li>Self-healing: pods replace themselves</li>
+        </ul>
+      </div>
+    ),
+    notes: [
+      'And that’s exactly what Kubernetes does. Follow the diagram left to right. At normal load I’m running two pods of the decision service. As requests arrive faster, CPU on those pods climbs. The horizontal pod autoscaler is watching that number, and when it crosses the target, Kubernetes starts new pods — up to six. The service spreads requests across all of them. When traffic drops, it scales back in, because pods cost money.',
+      'Two details that make this actually work, rather than just look good on a slide.',
+      'First — readiness. A brand new pod is not ready the moment it starts; it has to load policies first. So there’s a readiness check, and Kubernetes won’t send it a single request until it passes. Without that, scaling up would cause a burst of denials, which is worse than being slow.',
+      'Second — self-healing. If I delete a pod right now, and it’s one command, Kubernetes notices and starts a replacement, and traffic keeps flowing the whole time because the other pods are still answering. Losing one pod costs a sixth of the capacity, not all of it.',
+      'And you can watch all of it in the console — it shows decisions per pod, so you literally see new pods start taking work.',
+    ],
+  },
+  {
+    title: 'Live: autoscaling',
+    body: (
+      <div>
+        <h2 className="s-heading s-heading--small">Watch it scale</h2>
+        <LiveAutoscale />
+      </div>
+    ),
+    notes: [
+      'I can’t bring a Kubernetes cluster into this room, so this is a simulation — it says so on the slide. The code that really does this is in the repo, and it’s one make command.',
+      'Here we are at normal load: two pods, CPU comfortable. Now I’ll turn the load up — that’s make load-high.',
+      'CPU crosses the target, and the autoscaler starts pods. Notice the new ones come up dashed — they are not taking traffic yet, because they still have to load their policies and pass the readiness check. That’s the detail that stops a scale-up causing a burst of denials.',
+      'And now let me kill one. Kubernetes notices immediately and starts a replacement, which also has to pass readiness before it gets traffic. The decision count on the other pods never stops climbing — that’s the blast radius idea, live.',
+    ],
+  },
+  {
+    title: 'What doesn’t scale out',
+    body: (
+      <div>
+        <h2 className="s-heading s-heading--small">What doesn’t scale out — and what I’d do about it</h2>
+        <ul className="s-list">
+          <li>Postgres is a single instance, and the only stateful thing here</li>
+          <li>So it sits off the critical path: no reads on the hot path, no writes on the hot path</li>
+          <li>Database gone → devices still get on. The audit log just lags.</li>
+          <li>
+            At 100×: a <strong>queue</strong> in front of the log, <strong>read replicas</strong> for reporting
+          </li>
+          <li>
+            <strong>Not sharding</strong> — splitting the data across machines. That is a last resort.
+          </li>
+        </ul>
+      </div>
+    ),
+    notes: [
+      'One honest limitation, because every system has one.',
+      'Postgres here is a single instance, and it’s the only stateful thing in the system. Which makes it, technically, a single point of failure.',
+      'What I did about it is push it off the critical path entirely. Policies are cached in memory, so a decision never reads from it. Logs are batched, so a decision never writes to it. The database being slow or gone does not stop devices getting onto the network — it just means the audit log lags behind.',
+      'If traffic went up a hundred times, I’d put the decision log behind a queue, so writes get absorbed rather than buffered in process memory, and I’d add read replicas for the console’s reporting.',
+      'I would not shard it. You shard when you have run out of other options, and I haven’t.',
+    ],
   },
   {
     title: 'Thank you',
@@ -284,9 +232,16 @@ const SLIDES: Slide[] = [
         </p>
       </div>
     ),
-    notes: 'Thanks. The code and a page where you can try the engine yourself are at these links. Happy to take questions.',
+    notes: [
+      'That’s Mini ISE. Python and FastAPI for the two services, React and TypeScript for the console, Kubernetes for the scaling.',
+      'The code, and a page where you can try the policy engine yourself, are at these links. Happy to take questions.',
+    ],
   },
 ]
+
+if (SLIDE_COUNT !== SLIDES.length) {
+  throw new Error(`SLIDE_COUNT is ${SLIDE_COUNT} but the deck has ${SLIDES.length} slides`)
+}
 
 function parseIndex(hash: string): number {
   const n = Number(hash.split('/')[2])
@@ -422,7 +377,9 @@ export function Slides({ hash }: { hash: string }) {
       </div>
       {showNotes && (
         <aside className="notes" aria-label="Speaker notes">
-          {slide.notes}
+          {slide.notes.map((paragraph) => (
+            <p key={paragraph.slice(0, 40)}>{paragraph}</p>
+          ))}
         </aside>
       )}
     </div>

@@ -1345,11 +1345,11 @@ section {
 
 /* Leave room for the notes panel below the slide. */
 .deck--notes .stage {
-  width: min(calc(100vw - 2rem), calc((100vh - 14rem) * 16 / 9));
+  width: min(calc(100vw - 2rem), calc((100vh - 18rem) * 16 / 9));
 }
 
 .deck--notes .notes {
-  max-height: 7.5rem;
+  max-height: 11.5rem;
   overflow-y: auto;
 }
 
@@ -1641,6 +1641,40 @@ section {
   color: var(--graphite);
 }
 
+.s-diagram-slide {
+  display: grid;
+  gap: 1.6cqi;
+  align-content: center;
+}
+
+/* The grid gap already separates the heading from the drawing. */
+.s-diagram-slide .s-heading {
+  margin-bottom: 0;
+}
+
+/* Height is the scarce dimension on a 16:9 slide: heading, drawing and points
+   have to clear the footer. Letterboxing the drawing is the safe trade. */
+.s-diagram {
+  width: 100%;
+  height: auto;
+  max-height: 33cqi;
+}
+
+.s-diagram-points {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3cqi;
+  font-size: 1.5cqi;
+  color: var(--graphite);
+}
+
+.s-diagram-points li {
+  padding-top: 1.2cqi;
+  border-top: 1px solid var(--hairline);
+}
+
 .s-logo {
   height: 5cqi;
   width: auto;
@@ -1839,6 +1873,12 @@ section {
   color: #e9edea;
   border-radius: var(--radius);
   font-size: 1rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.notes p {
+  max-width: 62ch;
 }
 
 /* ---------- Print: one slide per page ---------- */
@@ -2266,4 +2306,229 @@ section {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ---------- On-slide demos ---------- */
+
+.d-demo {
+  display: grid;
+  gap: 1.6cqi;
+  font-size: 1.6cqi;
+}
+
+.d-controls {
+  display: flex;
+  align-items: center;
+  gap: 1cqi;
+  flex-wrap: wrap;
+}
+
+.d-btn {
+  font-family: var(--mono);
+  font-size: 1.3cqi;
+  font-stretch: 87.5%;
+  padding: 0.9cqi 1.6cqi;
+  border-radius: 0.5cqi;
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.d-btn:hover {
+  border-color: var(--graphite);
+}
+
+.d-btn--primary {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--surface);
+}
+
+.d-badge {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 1.1cqi;
+  font-stretch: 87.5%;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.7cqi 1.2cqi;
+  border-radius: 0.4cqi;
+}
+
+.d-badge--real {
+  background: var(--allow-soft);
+  color: var(--allow);
+}
+
+/* Deliberately loud: nobody should think this is a live cluster. */
+.d-badge--sim {
+  background: var(--quarantine-soft);
+  color: var(--quarantine);
+}
+
+.d-feed {
+  display: grid;
+  gap: 0.7cqi;
+  min-height: 26cqi;
+  align-content: start;
+}
+
+.d-empty {
+  font-size: 1.6cqi;
+  color: var(--graphite);
+  padding-top: 1.5cqi;
+}
+
+.d-row {
+  display: grid;
+  grid-template-columns: 30cqi 11cqi 1fr;
+  align-items: center;
+  gap: 1.5cqi;
+  padding: 0.9cqi 1.4cqi;
+  border-radius: 0.4cqi;
+  background: var(--surface);
+  border-left: 0.5cqi solid var(--hairline);
+}
+
+.d-row--allow {
+  border-left-color: var(--allow);
+}
+
+.d-row--quarantine {
+  border-left-color: var(--quarantine);
+}
+
+.d-row--deny {
+  border-left-color: var(--deny);
+}
+
+.d-who {
+  font-family: var(--mono);
+  font-size: 1.25cqi;
+  font-stretch: 87.5%;
+  color: var(--graphite);
+}
+
+.d-chip {
+  font-family: var(--mono);
+  font-size: 1.2cqi;
+  font-stretch: 87.5%;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.d-row--allow .d-chip {
+  color: var(--allow);
+}
+
+.d-row--quarantine .d-chip {
+  color: var(--quarantine);
+}
+
+.d-row--deny .d-chip {
+  color: var(--deny);
+}
+
+.d-reason {
+  font-size: 1.5cqi;
+}
+
+.d-tally {
+  display: flex;
+  gap: 3cqi;
+  font-family: var(--mono);
+  font-size: 1.3cqi;
+  font-stretch: 87.5%;
+  color: var(--graphite);
+}
+
+.d-stats {
+  display: grid;
+  grid-template-columns: 14cqi 1fr 16cqi;
+  gap: 3cqi;
+  align-items: center;
+}
+
+.d-stat {
+  display: grid;
+  gap: 0.5cqi;
+}
+
+.d-stat-value {
+  font-family: var(--display);
+  font-weight: 750;
+  font-size: 6cqi;
+  line-height: 0.9;
+  color: var(--signal);
+}
+
+.d-stat-label {
+  font-family: var(--mono);
+  font-size: 1.15cqi;
+  font-stretch: 87.5%;
+  color: var(--graphite);
+}
+
+.d-bar {
+  position: relative;
+  height: 2.4cqi;
+  border-radius: 1.2cqi;
+  background: var(--hairline);
+  overflow: hidden;
+}
+
+.d-bar span {
+  display: block;
+  height: 100%;
+  background: var(--signal);
+  transition: width 0.35s ease;
+}
+
+.d-bar span.is-over {
+  background: var(--quarantine);
+}
+
+.d-bar i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--ink);
+}
+
+.d-pods {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1.2cqi;
+  min-height: 11cqi;
+  align-content: start;
+}
+
+.d-pod {
+  display: grid;
+  gap: 0.6cqi;
+  padding: 1.2cqi;
+  border-radius: 0.5cqi;
+  background: var(--signal-soft);
+  border: 1px solid var(--signal);
+}
+
+.d-pod--waiting {
+  background: transparent;
+  border-style: dashed;
+}
+
+.d-pod-name {
+  font-family: var(--mono);
+  font-size: 1.2cqi;
+  font-stretch: 87.5%;
+  font-weight: 700;
+}
+
+.d-pod-state {
+  font-family: var(--mono);
+  font-size: 1.05cqi;
+  font-stretch: 87.5%;
+  color: var(--graphite);
 }
