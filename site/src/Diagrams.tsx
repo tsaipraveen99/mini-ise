@@ -354,3 +354,99 @@ export function StateDiagram() {
     </svg>
   )
 }
+
+/** What one POST /v1/decide actually touches — and what is deliberately beside it. */
+export function RequestFlowDiagram() {
+  return (
+    <svg className="s-diagram" viewBox="0 0 1000 400" role="img" aria-labelledby="flow-title">
+      <title id="flow-title">
+        A decide request is answered from rules held in memory, with no database call. Policy refreshes and decision
+        log writes happen separately, off the hot path.
+      </title>
+      <defs>
+        <Arrowhead id="flow-hot" color={SIGNAL} />
+        <Arrowhead id="flow-cold" color={GREY} />
+      </defs>
+
+      <text x="30" y="30" fontSize="15" fontFamily="var(--mono)" fill={SIGNAL} letterSpacing="1">
+        HOT PATH
+      </text>
+
+      <rect x="30" y="56" width="180" height="84" rx="10" fill={PANEL} stroke={LINE} strokeWidth="2" />
+      <text x="120" y="104" textAnchor="middle" fontSize="22" fontWeight="650" fill={INK}>
+        device
+      </text>
+
+      <line x1="216" y1="98" x2="292" y2="98" stroke={SIGNAL} strokeWidth="3" markerEnd="url(#flow-hot)" />
+      <text x="450" y="38" textAnchor="middle" fontSize="15" fontFamily="var(--mono)" fill={SIGNAL}>
+        POST /v1/decide
+      </text>
+
+      <rect x="300" y="50" width="300" height="96" rx="10" fill={SIGNAL_SOFT} stroke={SIGNAL} strokeWidth="2.5" />
+      <text x="450" y="92" textAnchor="middle" fontSize="22" fontWeight="650" fill={INK}>
+        evaluate the rules
+      </text>
+      <text x="450" y="120" textAnchor="middle" fontSize="15" fontFamily="var(--mono)" fill={SIGNAL}>
+        in memory
+      </text>
+
+      <line x1="606" y1="98" x2="682" y2="98" stroke={SIGNAL} strokeWidth="3" markerEnd="url(#flow-hot)" />
+
+      <rect x="690" y="56" width="280" height="84" rx="10" fill={PANEL} stroke={LINE} strokeWidth="2" />
+      <text x="830" y="92" textAnchor="middle" fontSize="20" fontWeight="650" fill={INK}>
+        allow · deny · quarantine
+      </text>
+      <text x="830" y="118" textAnchor="middle" fontSize="15" fill={GREY}>
+        …and the reason
+      </text>
+
+      <text x="366" y="186" fontSize="19" fontWeight="650" fill={INK}>
+        under 1 ms — no database, no cache, no other service
+      </text>
+
+      {/* Everything that touches Postgres runs beside the request, never inside it. */}
+      <rect x="330" y="290" width="240" height="90" rx="10" fill={PANEL} stroke={LINE} strokeWidth="2" />
+      <text x="450" y="332" textAnchor="middle" fontSize="20" fontWeight="650" fill={INK}>
+        Postgres
+      </text>
+      <text x="450" y="358" textAnchor="middle" fontSize="14" fontFamily="var(--mono)" fill={GREY}>
+        policies + log
+      </text>
+
+      <line
+        x1="338"
+        y1="286"
+        x2="338"
+        y2="152"
+        stroke={GREY}
+        strokeWidth="2"
+        strokeDasharray="7 5"
+        markerEnd="url(#flow-cold)"
+      />
+      <text x="350" y="232" fontSize="14" fontFamily="var(--mono)" fill={GREY}>
+        policies in · every 3s
+      </text>
+
+      <line
+        x1="828"
+        y1="146"
+        x2="580"
+        y2="306"
+        stroke={GREY}
+        strokeWidth="2"
+        strokeDasharray="7 5"
+        markerEnd="url(#flow-cold)"
+      />
+      <text x="706" y="248" fontSize="14" fontFamily="var(--mono)" fill={GREY}>
+        log out · in batches
+      </text>
+
+      <text x="620" y="360" fontSize="14" fontFamily="var(--mono)" fill={GREY}>
+        dashed = beside the request,
+      </text>
+      <text x="620" y="380" fontSize="14" fontFamily="var(--mono)" fill={GREY}>
+        not inside it
+      </text>
+    </svg>
+  )
+}

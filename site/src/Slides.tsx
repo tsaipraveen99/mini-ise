@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { PageLink } from './Chrome'
 import { AUTHOR, BOOTCAMP, REPO, SITE, SLIDE_COUNT } from './content'
-import { ArchitectureDiagram, AutoscaleDiagram, StateDiagram, UpOrOutDiagram } from './Diagrams'
+import {
+  ArchitectureDiagram,
+  AutoscaleDiagram,
+  RequestFlowDiagram,
+  StateDiagram,
+  UpOrOutDiagram,
+} from './Diagrams'
 import { LiveAutoscale, LiveDecisions } from './Demos'
 import { LogoMark } from './Logo'
 
@@ -130,6 +136,95 @@ const SLIDES: Slide[] = [
       'Bottom row, completely separate: the decision service. Also Python, also FastAPI. That’s the one answering access requests. I’ve got a simulator throwing realistic device traffic at it so there’s something to watch.',
       'The important thing is that those are two separate services, and that was deliberate. The policy API is used by a handful of admins clicking buttons. The decision service answers thousands of requests a second. They have nothing in common in terms of load, so they shouldn’t share a fate — if an admin runs an expensive report, it should not slow down the front door.',
       'Different load shapes, so a problem in one never becomes a problem in the other.',
+    ],
+  },
+  {
+    title: 'The API surface',
+    body: (
+      <div>
+        <h2 className="s-heading s-heading--small">Two services, eight endpoints</h2>
+        <div className="s-api">
+          <div className="is-hot">
+            <h3>decision-service</h3>
+            <ul>
+              <li className="is-load">
+                <b>POST</b>
+                <span>/v1/decide</span>
+              </li>
+              <li>
+                <b>GET</b>
+                <span>/healthz — am I alive?</span>
+              </li>
+              <li>
+                <b>GET</b>
+                <span>/readyz — should I get traffic?</span>
+              </li>
+            </ul>
+            <p>One endpoint carries all the load.</p>
+          </div>
+          <div>
+            <h3>policy-api</h3>
+            <ul>
+              <li>
+                <b>GET</b>
+                <span>/v1/policies</span>
+              </li>
+              <li>
+                <b>POST</b>
+                <span>/v1/policies</span>
+              </li>
+              <li>
+                <b>PATCH</b>
+                <span>/v1/policies/{'{id}'}</span>
+              </li>
+              <li>
+                <b>DELETE</b>
+                <span>/v1/policies/{'{id}'}</span>
+              </li>
+              <li>
+                <b>POST</b>
+                <span>/v1/policies/draft — Claude drafts</span>
+              </li>
+              <li>
+                <b>GET</b>
+                <span>/v1/decisions</span>
+              </li>
+              <li>
+                <b>GET</b>
+                <span>/v1/stats</span>
+              </li>
+            </ul>
+            <p>Everything else is admin work for a handful of people.</p>
+          </div>
+        </div>
+      </div>
+    ),
+    notes: [
+      'Let me show you the actual API, because the shape of it is the design.',
+      'The decision service has one endpoint that matters: POST slash v1 slash decide. That’s it. That is the entire hot path — a device asks, it answers.',
+      'The other two are health checks, and they are not the same question. Healthz means "am I alive" — if that fails, Kubernetes restarts the pod. Readyz means "should I be getting traffic" — if that fails, Kubernetes simply stops sending it any. That second one is the readiness gate, and it’s what stops a brand new pod answering before its policies have loaded.',
+      'The policy API has everything else: create, read, update and delete policies, the drafting endpoint where Claude turns plain English into a policy for a person to approve, the decision log, and the stats the console charts.',
+      'And that split is the whole point. One endpoint carries all the load. Seven do admin work for a handful of people. Which is exactly why one of these services runs six pods and the other runs one.',
+    ],
+  },
+  {
+    title: 'One request',
+    body: (
+      <div className="s-diagram-slide">
+        <h2 className="s-heading s-heading--small">What one request actually touches</h2>
+        <RequestFlowDiagram />
+        <ul className="s-diagram-points">
+          <li>Rules evaluated in memory</li>
+          <li>No database call on the way through</li>
+          <li>Refresh and logging sit beside it</li>
+        </ul>
+      </div>
+    ),
+    notes: [
+      'So what actually happens inside that one endpoint.',
+      'A request comes in. The service evaluates the rules against it — in memory, in Python — and returns allow, deny or quarantine, with the reason. That is the whole path. Under a millisecond. And notice what is not on it: no database call, no cache lookup, no call to another service.',
+      'Everything that does touch the database is off to the side, and I’ve drawn it dashed. Policies come in on a background task every three seconds. Decision logs go out buffered, in batches.',
+      'That is the only really clever thing in this project: the slow thing and the fast thing were separated, so the fast thing stays fast even when the slow thing is broken.',
     ],
   },
   {

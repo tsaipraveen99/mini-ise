@@ -47,9 +47,9 @@ const title = (slide, text, w = 11.7) =>
   })
 
 // Width is clamped so a label placed on the right half keeps its box on the slide.
-const eyebrow = (slide, text, x, y, color = GREY) =>
+const eyebrow = (slide, text, x, y, color = GREY, w) =>
   slide.addText(text, {
-    x, y, w: Math.min(6, 13.333 - x - 0.5), h: 0.28,
+    x, y, w: w ?? Math.min(6, 13.333 - x - 0.5), h: 0.28,
     fontFace: MONO, fontSize: 10, color, charSpacing: 1, isTextBox: true, margin: 0,
   })
 
@@ -444,7 +444,122 @@ function points(slide, items) {
   )
 }
 
-/* ---------- 7. Holds no state ---------- */
+/* ---------- 7. The API surface ---------- */
+{
+  const s = pres.addSlide()
+  s.background = { color: SURFACE }
+  title(s, 'Two services, eight endpoints')
+
+  const cols = [
+    {
+      x: 0.8, name: 'decision-service', hot: true,
+      rows: [['POST', '/v1/decide', true], ['GET', '/healthz — am I alive?', false],
+             ['GET', '/readyz — should I get traffic?', false]],
+      foot: 'One endpoint carries all the load.',
+    },
+    {
+      x: 6.9, name: 'policy-api', hot: false,
+      rows: [['GET', '/v1/policies', false], ['POST', '/v1/policies', false],
+             ['PATCH', '/v1/policies/{id}', false], ['DELETE', '/v1/policies/{id}', false],
+             ['POST', '/v1/policies/draft — Claude drafts', false],
+             ['GET', '/v1/decisions', false], ['GET', '/v1/stats', false]],
+      foot: 'Everything else is admin work for a handful of people.',
+    },
+  ]
+  cols.forEach((col) => {
+    s.addShape(pres.ShapeType.roundRect, {
+      x: col.x, y: 1.5, w: 5.6, h: 4.3, rectRadius: 0.1,
+      fill: { color: col.hot ? SOFT : PANEL },
+      line: { color: col.hot ? SIGNAL : HAIR, width: col.hot ? 1.5 : 1 },
+    })
+    s.addText(col.name, {
+      x: col.x + 0.4, y: 1.75, w: 4.8, h: 0.45,
+      fontFace: HEAD, fontSize: 21, bold: true, color: INK, isTextBox: true, margin: 0,
+    })
+    col.rows.forEach(([method, path, load], i) => {
+      const y = 2.35 + i * 0.36
+      s.addText(method, {
+        x: col.x + 0.4, y, w: 0.95, h: 0.3,
+        fontFace: MONO, fontSize: 10, bold: !!load,
+        color: load ? SIGNAL : GREY, isTextBox: true, margin: 0,
+      })
+      s.addText(path, {
+        x: col.x + 1.4, y, w: 4.0, h: 0.3,
+        fontFace: MONO, fontSize: 10, bold: !!load,
+        color: load ? SIGNAL : INK, isTextBox: true, margin: 0,
+      })
+    })
+    s.addText(col.foot, {
+      x: col.x + 0.4, y: 5.2, w: 4.8, h: 0.45,
+      fontFace: BODY, fontSize: 12, color: GREY, isTextBox: true, margin: 0,
+    })
+  })
+
+  s.addNotes(
+    'Let me show you the actual API, because the shape of it is the design.\n\n' +
+    'The decision service has one endpoint that matters: POST /v1/decide. That’s it. That is the entire hot path — a device asks, it answers.\n\n' +
+    'The other two are health checks, and they are not the same question. Healthz means "am I alive" — if that fails, Kubernetes restarts the pod. Readyz means "should I be getting traffic" — if that fails, Kubernetes simply stops sending it any. That second one is the readiness gate, and it’s what stops a brand new pod answering before its policies have loaded.\n\n' +
+    'The policy API has everything else: create, read, update and delete policies, the drafting endpoint where Claude turns plain English into a policy for a person to approve, the decision log, and the stats the console charts.\n\n' +
+    'And that split is the whole point. One endpoint carries all the load. Seven do admin work for a handful of people. Which is exactly why one of these services runs six pods and the other runs one.',
+  )
+}
+
+/* ---------- 8. One request ---------- */
+{
+  const s = pres.addSlide()
+  s.background = { color: SURFACE }
+  title(s, 'What one request actually touches')
+
+  eyebrow(s, 'HOT PATH', 0.8, 1.35, SIGNAL, 2.0)
+  s.addText('POST /v1/decide', {
+    x: 4.4, y: 1.3, w: 3.4, h: 0.32,
+    fontFace: MONO, fontSize: 11, color: SIGNAL, align: 'center', isTextBox: true, margin: 0,
+  })
+
+  node(s, { x: 0.8, y: 1.75, w: 2.6, h: 0.95, name: 'device', sub: 'asks' })
+  arrow(s, { x: 3.5, y: 2.22, w: 0.75, h: 0, color: SIGNAL, width: 2.5 })
+  node(s, { x: 4.35, y: 1.72, w: 3.5, h: 1.0, name: 'evaluate the rules', sub: 'in memory', accent: true })
+  arrow(s, { x: 7.95, y: 2.22, w: 0.75, h: 0, color: SIGNAL, width: 2.5 })
+  node(s, { x: 8.8, y: 1.75, w: 3.7, h: 0.95, name: 'allow · deny · quarantine', sub: 'and the reason' })
+
+  s.addText('Under 1 ms — no database, no cache, no other service.', {
+    x: 3.3, y: 2.9, w: 9.2, h: 0.4,
+    fontFace: HEAD, fontSize: 17, bold: true, color: INK, isTextBox: true, margin: 0,
+  })
+
+  node(s, { x: 4.35, y: 4.45, w: 2.9, h: 0.95, name: 'Postgres', sub: 'policies + log' })
+  s.addShape(pres.ShapeType.line, {
+    x: 4.9, y: 2.78, w: 0, h: 1.62,
+    line: { color: GREY, width: 1.75, dashType: 'dash', endArrowType: 'triangle' },
+    flipV: true,
+  })
+  s.addText('policies in · every 3s', {
+    x: 5.05, y: 3.5, w: 3.0, h: 0.3,
+    fontFace: MONO, fontSize: 10, color: GREY, isTextBox: true, margin: 0,
+  })
+  s.addShape(pres.ShapeType.line, {
+    x: 7.3, y: 2.78, w: 3.0, h: 1.62,
+    line: { color: GREY, width: 1.75, dashType: 'dash', endArrowType: 'triangle' },
+    flipH: true, flipV: true,
+  })
+  s.addText('log out · in batches', {
+    x: 8.5, y: 3.62, w: 3.0, h: 0.3,
+    fontFace: MONO, fontSize: 10, color: GREY, isTextBox: true, margin: 0,
+  })
+  s.addText('Dashed = beside the request, not inside it.', {
+    x: 0.8, y: 5.65, w: 11.7, h: 0.35,
+    fontFace: MONO, fontSize: 10, color: GREY, isTextBox: true, margin: 0,
+  })
+
+  s.addNotes(
+    'So what actually happens inside that one endpoint.\n\n' +
+    'A request comes in. The service evaluates the rules against it — in memory, in Python — and returns allow, deny or quarantine, with the reason. That is the whole path. Under a millisecond. And notice what is not on it: no database call, no cache lookup, no call to another service.\n\n' +
+    'Everything that does touch the database is off to the side, and I’ve drawn it dashed. Policies come in on a background task every three seconds. Decision logs go out buffered, in batches.\n\n' +
+    'That is the only really clever thing in this project: the slow thing and the fast thing were separated, so the fast thing stays fast even when the slow thing is broken.',
+  )
+}
+
+/* ---------- 9. Holds no state ---------- */
 {
   const s = pres.addSlide()
   s.background = { color: SURFACE }
@@ -492,7 +607,7 @@ function points(slide, items) {
   )
 }
 
-/* ---------- 8. How it scales ---------- */
+/* ---------- 10. How it scales ---------- */
 {
   const s = pres.addSlide()
   s.background = { color: SURFACE }
@@ -558,7 +673,7 @@ function points(slide, items) {
   )
 }
 
-/* ---------- 9. Live: autoscaling (static rendition) ---------- */
+/* ---------- 11. Live: autoscaling (static rendition) ---------- */
 {
   const s = pres.addSlide()
   s.background = { color: SURFACE }
@@ -645,7 +760,7 @@ function points(slide, items) {
   )
 }
 
-/* ---------- 10. What doesn't scale out ---------- */
+/* ---------- 12. What doesn't scale out ---------- */
 {
   const s = pres.addSlide()
   s.background = { color: SURFACE }
@@ -694,7 +809,7 @@ function points(slide, items) {
   )
 }
 
-/* ---------- 11. Thank you ---------- */
+/* ---------- 13. Thank you ---------- */
 {
   const s = pres.addSlide()
   s.background = { color: DARK }

@@ -1,6 +1,6 @@
 # Mini ISE — the talk
 
-Word-for-word script for the 11-slide deck. **1,634 words — about 11 minutes**
+Word-for-word script for the 13-slide deck. **about 13 minutes**
 at a normal speaking pace (~150 wpm).
 
 For a hard ten-minute slot, don't read slides 3 and 9 (the two demos) word for
@@ -12,8 +12,9 @@ not like a script. Read it out loud twice and the phrasing starts drifting
 toward how you actually talk — let it.
 
 **Shape of the talk:** the one scaling idea that matters (2–3) → what I built
-(4) → watch it decide (5) → how the project uses that idea (6–8) → watch it
-scale (9) → the honest limit (10) → questions (11).
+(4) → watch it decide (5) → the services and the API (6–8) → how the project
+uses that idea (9–10) → watch it scale (11) → the honest limit (12) →
+questions (13).
 
 The theory comes **first**, deliberately: by the time the project appears, the
 room already has the idea it demonstrates.
@@ -155,7 +156,51 @@ That's the blast radius idea from two slides ago, applied.
 
 ---
 
-## Slide 7 — The decision service holds no state.  *(~60 seconds)*
+## Slide 7 — Two services, eight endpoints  *(~55 seconds)*
+
+Let me show you the actual API, because the shape of it is the design.
+
+The decision service has **one endpoint that matters**: `POST /v1/decide`.
+That's it. That is the entire hot path — a device asks, it answers.
+
+The other two are health checks, and they are not the same question.
+`/healthz` means "am I alive" — if that fails, Kubernetes restarts the pod.
+`/readyz` means "should I be getting traffic" — if that fails, Kubernetes
+simply stops sending it any. That second one is the readiness gate, and it is
+what stops a brand new pod answering before its policies have loaded.
+
+The policy API has everything else: create, read, update and delete policies,
+the drafting endpoint where Claude turns plain English into a policy for a
+person to approve, the decision log, and the stats the console charts.
+
+And that split is the whole point. One endpoint carries all the load. Seven
+do admin work for a handful of people. Which is exactly why one of these
+services runs six pods and the other runs one.
+
+---
+
+## Slide 8 — What one request actually touches  *(~50 seconds)*
+
+So what actually happens inside that one endpoint.
+
+A request comes in. The service evaluates the rules against it — in memory,
+in Python — and returns allow, deny or quarantine, with the reason. That is
+the whole path. Under a millisecond.
+
+And notice what is *not* on it: no database call, no cache lookup, no call to
+another service.
+
+Everything that does touch the database is off to the side, and I've drawn it
+dashed. Policies come **in** on a background task every three seconds.
+Decision logs go **out** buffered, in batches.
+
+That is the only really clever thing in this project: the slow thing and the
+fast thing were separated, so the fast thing stays fast even when the slow
+thing is broken.
+
+---
+
+## Slide 9 — The decision service holds no state.  *(~60 seconds)*
 
 And this is the design choice the whole thing rests on.
 
@@ -182,7 +227,7 @@ just add pods.
 
 ---
 
-## Slide 8 — So Kubernetes just adds pods.  *(~60 seconds)*
+## Slide 10 — So Kubernetes just adds pods.  *(~60 seconds)*
 
 And that's exactly what Kubernetes does.
 
@@ -211,7 +256,7 @@ you literally see new pods start taking work.
 
 ---
 
-## Slide 9 — Watch it scale  *(~60 seconds)*
+## Slide 11 — Watch it scale  *(~60 seconds)*
 
 I can't bring a Kubernetes cluster into this room, so this is a simulation —
 and it says so on the slide. The code that really does this is in the repo,
@@ -236,7 +281,7 @@ puts it back to two if you want to run it twice.)*
 
 ---
 
-## Slide 10 — What doesn't scale out.  *(~50 seconds)*
+## Slide 12 — What doesn't scale out.  *(~50 seconds)*
 
 One honest limitation, because every system has one.
 
@@ -257,7 +302,7 @@ haven't.
 
 ---
 
-## Slide 11 — Thank you.  *(~25 seconds)*
+## Slide 13 — Thank you.  *(~25 seconds)*
 
 That's Mini ISE. Python and FastAPI for the two services, React and
 TypeScript for the console, Kubernetes for the scaling.

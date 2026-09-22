@@ -2532,3 +2532,72 @@ section {
   font-stretch: 87.5%;
   color: var(--graphite);
 }
+
+/* ---------- API surface slide ---------- */
+
+.s-api {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3.5cqi;
+}
+
+.s-api > div {
+  display: grid;
+  gap: 1.4cqi;
+  align-content: start;
+  padding: 2.4cqi 2.8cqi;
+  border-radius: 0.6cqi;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+}
+
+.s-api > .is-hot {
+  background: var(--signal-soft);
+  border-color: var(--signal);
+}
+
+.s-api h3 {
+  font-family: var(--display);
+  font-weight: 750;
+  text-transform: uppercase;
+  font-size: 2.8cqi;
+  line-height: 1;
+}
+
+.s-api ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.9cqi;
+  font-family: var(--mono);
+  font-size: 1.35cqi;
+  font-stretch: 87.5%;
+}
+
+.s-api li {
+  display: grid;
+  grid-template-columns: 7cqi 1fr;
+  gap: 1cqi;
+  color: var(--graphite);
+}
+
+.s-api li b {
+  color: var(--graphite);
+  font-weight: 400;
+}
+
+.s-api li.is-load {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.s-api li.is-load b {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.s-api p {
+  font-family: var(--body);
+  font-size: 1.5cqi;
+  color: var(--graphite);
+}
