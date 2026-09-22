@@ -301,41 +301,49 @@ function points(slide, items) {
 {
   const s = pres.addSlide()
   s.background = { color: SURFACE }
-  title(s, 'A laptop asks. Something has to answer.')
+  title(s, 'Mini ISE, in four pieces')
 
-  const chips = [
-    ['ALLOW', ALLOW, ALLOW_BG, 'known device, known user'],
-    ['QUARANTINE', QUAR, QUAR_BG, 'let it on, but only just'],
-    ['DENY', DENY, DENY_BG, 'and say which rule did it'],
+  s.addText('Who gets onto a company network — answered in under a millisecond.', {
+    x: 0.8, y: 1.3, w: 11.7, h: 0.45,
+    fontFace: BODY, fontSize: 18, color: GREY, isTextBox: true, margin: 0,
+  })
+
+  const pieces = [
+    ['decision-service', 'Answers allow, deny or quarantine. The one under load.', true],
+    ['policy-api', 'Where the rules live, and where Claude drafts them.', false],
+    ['console', 'React. Admins write rules and watch decisions land.', false],
+    ['simulator', 'Fake devices, so there is traffic to watch.', false],
   ]
-  chips.forEach(([label, fg, bg, sub], i) => {
-    const x = 0.8 + i * 4.1
+  pieces.forEach(([name, line, hot], i) => {
+    const x = 0.8 + (i % 2) * 6.1
+    const y = 2.0 + Math.floor(i / 2) * 1.75
     s.addShape(pres.ShapeType.roundRect, {
-      x, y: 1.6, w: 3.5, h: 1.15, rectRadius: 0.08,
-      fill: { color: bg }, line: { color: fg, width: 1.25 },
+      x, y, w: 5.6, h: 1.5, rectRadius: 0.1,
+      fill: { color: hot ? SOFT : PANEL },
+      line: { color: hot ? SIGNAL : HAIR, width: hot ? 1.5 : 1 },
     })
-    s.addText(label, {
-      x, y: 1.75, w: 3.5, h: 0.4,
-      fontFace: HEAD, fontSize: 17, bold: true, color: fg, align: 'center', isTextBox: true, margin: 0,
+    s.addText(name, {
+      x: x + 0.35, y: y + 0.24, w: 4.9, h: 0.38,
+      fontFace: MONO, fontSize: 14, bold: true, color: hot ? SIGNAL : INK, isTextBox: true, margin: 0,
     })
-    s.addText(sub, {
-      x, y: 2.2, w: 3.5, h: 0.35,
-      fontFace: BODY, fontSize: 12, color: GREY, align: 'center', isTextBox: true, margin: 0,
+    s.addText(line, {
+      x: x + 0.35, y: y + 0.72, w: 4.9, h: 0.6,
+      fontFace: BODY, fontSize: 13, color: GREY, isTextBox: true, margin: 0,
     })
   })
 
-  bullets(s, [
-    'Zero trust: every request checked, every time',
-    'A device asks for access to a resource',
-    'A service answers allow, deny or quarantine — always with a reason',
-    'Admins manage the rules in a React console',
-  ], { x: 0.8, y: 3.35, w: 11.7, h: 2.4, fontSize: 17 })
+  s.addText('Real Python, FastAPI, Postgres and Kubernetes. The only invented part is the devices.', {
+    x: 0.8, y: 5.7, w: 11.7, h: 0.4,
+    fontFace: BODY, fontSize: 13, color: GREY, isTextBox: true, margin: 0,
+  })
 
   s.addNotes(
-    'So that’s the theory. Here’s the thing I built, and it has exactly that problem.\n\nIn an old corporate network, once you were inside the building, you were trusted. Zero trust throws that out. Every single request gets checked, every time — it doesn’t matter that you checked thirty seconds ago.\n\n' +
-    'Mini ISE does exactly that. A device shows up and asks: can this user, on this laptop, from this location, reach the finance database right now? And a service answers one of three things — allow, deny, or quarantine — and it always gives a reason.\n\n' +
-    'That reason matters more than people expect. When someone gets locked out at nine in the morning, the help desk needs to know which rule did it.\n\n' +
-    'On the other side, admins manage those rules in a React console, and they can watch decisions stream in live.',
+    'So that’s the theory. Here’s the thing I built, and it has exactly that problem.\n\n' +
+    'Mini ISE is a small version of the software that decides which laptops and phones are allowed onto a company network. The real ones are big enterprise products — this is the same idea, small enough that I can explain all of it.\n\n' +
+    'The idea it implements is zero trust. In an old corporate network, once you were inside the building, you were trusted. Zero trust throws that out: every single request gets checked, every time, and it doesn’t matter that you checked thirty seconds ago.\n\n' +
+    'Four pieces. The decision service is the one that answers — a device asks "can this user, on this laptop, from this location, reach the finance database right now", and it says allow, deny or quarantine. Always with a reason, because when someone is locked out at nine in the morning, the help desk needs to know which rule did it.\n\n' +
+    'The policy API is where the rules live, and where an admin can describe a rule in plain English and have Claude draft it — a person still approves it before it goes live. The console is React: that’s where admins write rules and watch decisions arrive. And the simulator throws realistic device traffic at the whole thing so there is something to watch.\n\n' +
+    'Everything there is real except the devices. Real Python, real FastAPI, real Postgres, real Kubernetes.',
   )
 }
 

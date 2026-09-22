@@ -84,24 +84,40 @@ const SLIDES: Slide[] = [
     title: 'What it is',
     body: (
       <div>
-        <h2 className="s-heading">A laptop asks. Something has to answer.</h2>
-        <ul className="s-list s-list--roomy">
-          <li>
-            <strong>Zero trust:</strong> every request checked, every time
-          </li>
-          <li>A device asks for access to a resource</li>
-          <li>
-            A service answers <strong>allow, deny or quarantine</strong> — always with a reason
-          </li>
-          <li>Admins manage the rules in a React console</li>
-        </ul>
+        <h2 className="s-heading s-heading--small">Mini ISE, in four pieces</h2>
+        <p className="s-lede s-lede--tight">
+          Who gets onto a company network — answered in under a millisecond.
+        </p>
+        <div className="s-pieces">
+          <div className="is-hot">
+            <h3>decision-service</h3>
+            <p>Answers allow, deny or quarantine. The one under load.</p>
+          </div>
+          <div>
+            <h3>policy-api</h3>
+            <p>Where the rules live, and where Claude drafts them.</p>
+          </div>
+          <div>
+            <h3>console</h3>
+            <p>React. Admins write rules and watch decisions land.</p>
+          </div>
+          <div>
+            <h3>simulator</h3>
+            <p>Fake devices, so there is traffic to watch.</p>
+          </div>
+        </div>
+        <p className="s-footnote s-footnote--small">
+          Real Python, FastAPI, Postgres and Kubernetes. The only invented part is the devices.
+        </p>
       </div>
     ),
     notes: [
-      'So that’s the theory. Here’s the thing I built, and it has exactly that problem.\n\nIn an old corporate network, once you were inside the building, you were trusted. Zero trust throws that out. Every single request gets checked, every time — it doesn’t matter that you checked thirty seconds ago.',
-      'Mini ISE does exactly that. A device shows up and asks: can this user, on this laptop, from this location, reach the finance database right now? And a service answers one of three things — allow, deny, or quarantine — and it always gives a reason.',
-      'That reason matters more than people expect. When someone gets locked out at nine in the morning, the help desk needs to know which rule did it.',
-      'On the other side, admins manage those rules in a React console, and they can watch decisions stream in live.',
+      'So that’s the theory. Here’s the thing I built, and it has exactly that problem.',
+      'Mini ISE is a small version of the software that decides which laptops and phones are allowed onto a company network. The real ones are big enterprise products — this is the same idea, small enough that I can explain all of it.',
+      'The idea it implements is zero trust. In an old corporate network, once you were inside the building, you were trusted. Zero trust throws that out: every single request gets checked, every time, and it doesn’t matter that you checked thirty seconds ago.',
+      'Four pieces. The decision service is the one that answers — a device asks "can this user, on this laptop, from this location, reach the finance database right now", and it says allow, deny or quarantine. Always with a reason, because when someone is locked out at nine in the morning, the help desk needs to know which rule did it.',
+      'The policy API is where the rules live, and where an admin can describe a rule in plain English and have Claude draft it — a person still approves it before it goes live. The console is React: that’s where admins write rules and watch decisions arrive. And the simulator throws realistic device traffic at the whole thing so there is something to watch.',
+      'Everything there is real except the devices. Real Python, real FastAPI, real Postgres, real Kubernetes.',
     ],
   },
   {

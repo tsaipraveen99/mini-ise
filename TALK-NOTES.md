@@ -90,25 +90,40 @@ the things you want to scale, and concentrate it in as few places as you can.
 
 ---
 
-## Slide 4 — A laptop asks. Something has to answer.  *(~50 seconds)*
+## Slide 4 — Mini ISE, in four pieces  *(~65 seconds)*
 
 So that's the theory. Here's the thing I built, and it has exactly that
 problem.
 
-In an old corporate network, once you were inside the building, you were
-trusted. Zero trust throws that out. Every single request gets checked, every
-time — it doesn't matter that you checked thirty seconds ago.
+Mini ISE is a small version of the software that decides which laptops and
+phones are allowed onto a company network. The real ones are big enterprise
+products — this is the same idea, small enough that I can explain all of it.
 
-Mini ISE does exactly that. A device shows up and asks: can this user, on
-this laptop, from this location, reach the finance database right now? And a
-service answers one of three things — allow, deny, or quarantine — and it
-always gives a reason.
+The idea it implements is **zero trust**. In an old corporate network, once
+you were inside the building, you were trusted. Zero trust throws that out:
+every single request gets checked, every time, and it doesn't matter that you
+checked thirty seconds ago.
 
-That reason matters more than people expect. When someone gets locked out at
-nine in the morning, the help desk needs to know *which rule* did it.
+**Four pieces.**
 
-On the other side, admins manage those rules in a React console, and they can
-watch decisions stream in live.
+The **decision service** is the one that answers. A device asks "can this
+user, on this laptop, from this location, reach the finance database right
+now" — and it says allow, deny or quarantine. Always with a reason, because
+when someone is locked out at nine in the morning, the help desk needs to know
+*which rule* did it.
+
+The **policy API** is where the rules live, and where an admin can describe a
+rule in plain English and have Claude draft it — a person still approves it
+before it goes live.
+
+The **console** is React. That's where admins write rules and watch decisions
+arrive.
+
+And the **simulator** throws realistic device traffic at the whole thing, so
+there is something to watch.
+
+Everything there is real except the devices. Real Python, real FastAPI, real
+Postgres, real Kubernetes.
 
 ---
 
