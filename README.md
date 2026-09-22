@@ -51,6 +51,8 @@ make down                   # delete the cluster
 
 `site/` is a static React app: a landing page where you can run the policy engine in the browser, and the talk slides at `#/slides` (arrow keys to move, `N` for speaker notes, `F` for full screen, `#/slides/print` to save as PDF).
 
+`TALK-NOTES.md` is the spoken script. `Mini-ISE-talk.pptx` is the same deck as a PowerPoint file, rebuilt with `cd scripts && npm install && npm run build`.
+
 The browser engine (`site/src/engine.ts`) and the Python engine (`backend/src/mini_ise/rules.py`) both run the shared cases in `fixtures/policy-cases.json`, so they can't quietly disagree.
 
 ```bash

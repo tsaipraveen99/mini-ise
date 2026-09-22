@@ -1,0 +1,11 @@
+{
+  "name": "mini-ise-slides",
+  "private": true,
+  "description": "Builds the PowerPoint version of the talk deck.",
+  "scripts": {
+    "build": "node build-pptx.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  }
+}
